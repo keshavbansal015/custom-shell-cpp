@@ -103,9 +103,28 @@ std::string cd(std::string directory) {
   if (directory == "") {
     return "";
   }
-  if(chdir(directory.c_str()) == 0) {
+
+  string targetDir = directory;
+  if (directory == "~") {
+    char* home = getenv("HOME");
+    targetDir = home ? home : "";
+  } else if (directory == "-") {
+    char* oldpwd = getenv("OLDPWD");
+    if (!oldpwd) {
+      return "cd: OLDPWD not set";
+    }
+    targetDir = oldpwd;
+  }
+
+  // Save old path to OLDPWD if chdir succeeds
+  std::error_code ec;
+  std::string oldPath = std::filesystem::current_path(ec).string();
+
+  if (chdir(targetDir.c_str()) == 0) {
+    setenv("OLDPWD", oldPath.c_str(), 1);
     return "";
   }
+
   return "cd: " + directory + ": No such file or directory";
 }
 
