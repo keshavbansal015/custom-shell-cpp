@@ -14,6 +14,8 @@ std::string evaluateCommand(std::string command) {
   using namespace std;
   if (command == "exit") {
     exit(0); 
+  } else if (command.substr(0, 4) == "echo" && command[4] == ' ') {
+    return command.substr(5);
   }
   return command + ": command not found";
 }
