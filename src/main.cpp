@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <unistd.h>
+
 
 
 #define SHELL_COMMANDS {"echo" , "type" , "exit"}
@@ -11,16 +13,44 @@ std::string readInput() {
   string command;
   getline(cin, command);
   return command;
+} 
+
+std::string findInPATH(std::string command) {
+  using namespace std;  
+  char* path = getenv("PATH");
+  string pathStr = path;
+  
+  size_t prevPos = 0;
+  size_t currPos = pathStr.find(":");
+  
+  // Traverse through all the directories in the PATH
+  while(currPos != string::npos){
+    string currDir = pathStr.substr(prevPos, currPos-prevPos);
+    string fullPath = currDir + "/" + command;
+    
+    if(access(fullPath.c_str(), F_OK) == 0 && access(fullPath.c_str(), X_OK) == 0) {
+      return command + " is " + fullPath;
+    }
+
+    prevPos = currPos+1;
+    currPos = pathStr.find(":", prevPos);
+  }
+  
+  return command + ": not found";
 }
+
 
 std::string typeCommand(std::string command) {
   using namespace std;
+  
+  // check if the command is a shell builtin
   for (string shellCommand: SHELL_COMMANDS) {
     if (command.substr(0, shellCommand.length()) == shellCommand) {
       return shellCommand + " is a shell builtin";
     }
   }
-  return command + ": not found";
+
+  return findInPATH(command);
 }
 
 std::string evaluateCommand(std::string command) {
