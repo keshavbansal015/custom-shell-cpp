@@ -4,7 +4,7 @@
 
 std::string readInput() {
   using namespace std;
-  cout << "$ "<<endl;
+  cout << "$ ";
   string command;
   getline(cin, command);
   return command;
