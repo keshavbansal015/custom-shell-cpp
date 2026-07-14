@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <ranges>
 #include <filesystem>
+#include <system_error>
 
 
 #define SHELL_COMMANDS {"echo" , "type", "pwd", "cd" , "exit"}
@@ -117,8 +118,8 @@ std::string cd(std::string directory) {
   }
 
   // Save old path to OLDPWD if chdir succeeds
-  std::error_code ec;
-  std::string oldPath = std::filesystem::current_path(ec).string();
+  error_code ec;
+  string oldPath = filesystem::current_path(ec).string();
 
   if (chdir(targetDir.c_str()) == 0) {
     setenv("OLDPWD", oldPath.c_str(), 1);
@@ -128,12 +129,23 @@ std::string cd(std::string directory) {
   return "cd: " + directory + ": No such file or directory";
 }
 
+std::string echo(std::string message) {
+  using namespace std;
+  
+  size_t pos = 0;
+  while ((pos = message.find("'", pos)) != std::string::npos) {
+    message.replace(pos, 1, "");
+    pos += 1;
+  }
+  return message;
+}
+
 std::string evaluateCommand(std::string command) {
   using namespace std;
   if (command == "exit") {
     exit(0); 
   } else if (command.substr(0, 4) == "echo" && command[4] == ' ') {
-    return command.substr(5);
+    return echo(command.substr(5));
   } else if (command.substr(0, 4) == "type" && command[4] == ' '){
     return typeCommand(command.substr(5));
   } else if (command == "pwd") {
