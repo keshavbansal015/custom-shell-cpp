@@ -58,7 +58,7 @@ std::string typeCommand(std::string command) {
   }
   return command + " is " + output;
 }
-std::string cleanInput(std::string message) {
+std::vector<std::string> parseArguments(std::string message) {
   using namespace std;
   vector<string> args;
   string current_arg = "";
@@ -111,7 +111,12 @@ std::string cleanInput(std::string message) {
   if (has_arg) {
     args.push_back(current_arg);
   }
+  return args;
+}
 
+std::string cleanInput(std::string message) {
+  using namespace std;
+  vector<string> args = parseArguments(message);
   string result = "";
   for (size_t i = 0; i < args.size(); ++i) {
     if (i > 0) {
@@ -125,15 +130,10 @@ std::string cleanInput(std::string message) {
 std::string execute(std::string command) {
   using namespace std;
 
-  // using execvp
-  command = cleanInput(command);
-
-  if (command == "") {
+  vector<string> tokens = parseArguments(command);
+  if (tokens.empty()) {
     return "";
   }
-
-  vector<string> tokens =
-      command | views::split(' ') | ranges::to<vector<string>>();
 
   // converting vector of string to array of char*
   char **args = new char *[tokens.size() + 1];
