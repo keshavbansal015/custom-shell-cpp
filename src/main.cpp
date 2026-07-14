@@ -71,11 +71,6 @@ std::vector<std::string> parseArguments(std::string message) {
     if (in_single_quotes) {
       if (c == '\'') {
         in_single_quotes = false;
-      } else if (c == '\\' && i + 1 < message.length() &&
-                 (message[i + 1] == '\'' || message[i + 1] == '\\' ||
-                  message[i + 1] == '$' || message[i + 1] == '\n')) {
-        current_arg += message[i + 1];
-        i++;
       } else {
         current_arg += c;
       }
