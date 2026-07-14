@@ -2,9 +2,12 @@
 #include <string>
 
 
+#define SHELL_COMMANDS {"echo" , "type" , "exit"}
+#define SHELL_PROMPT "$ "
+
 std::string readInput() {
   using namespace std;
-  cout << "$ ";
+  cout << SHELL_PROMPT;
   string command;
   getline(cin, command);
   return command;
@@ -16,6 +19,8 @@ std::string evaluateCommand(std::string command) {
     exit(0); 
   } else if (command.substr(0, 4) == "echo" && command[4] == ' ') {
     return command.substr(5);
+  } else if (command.substr(0, 4) == "type" && command[4] == ' '){
+    
   }
   return command + ": command not found";
 }
@@ -25,6 +30,19 @@ void printOutput(std::string output) {
   cout<<output<<endl;
 }
 
+
+std::string typeCommand (std::string command) {
+  using namespace std;
+  
+  for (string shellCommand: SHELL_COMMANDS) {
+    if (command.substr(0, shellCommand.length()) == shellCommand) {
+      return shellCommand + " is a shell builtin";
+    }
+  }
+  return command + ": command not found";
+}
+
+
 void shellLoop() {
   using namespace std;
   while(true) {
@@ -33,6 +51,7 @@ void shellLoop() {
     printOutput(output);
   }
 }
+
 int main() {
   // Flush after every std::cout / std:cerr
   std::cout << std::unitbuf;
