@@ -3,9 +3,10 @@
 
 
 std::string readInput() {
-  std::cout << "$"<<std::endl;
-  std::string command;
-  std::getline(std::cin, command);
+  using namespace std;
+  cout << "$ "<<endl;
+  string command;
+  getline(cin, command);
   return command;
 }
 
@@ -14,13 +15,15 @@ std::string evaluateCommand(std::string command) {
 }
 
 void printOutput(std::string output) {
-  std::cout<<output<<std::endl;
+  using namespace std;
+  cout<<output<<endl;
 }
 
 void shellLoop() {
+  using namespace std;
   while(true) {
-    std::string command = readInput();
-    std::string output = evaluateCommand(command);
+    string command = readInput();
+    string output = evaluateCommand(command);
     printOutput(output);
   }
 }
@@ -32,5 +35,5 @@ int main() {
   // TODO: Uncomment the code below to pass the first stage
   shellLoop();
 
-  
+
 }
