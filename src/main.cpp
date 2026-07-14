@@ -13,6 +13,16 @@ std::string readInput() {
   return command;
 }
 
+std::string typeCommand(std::string command) {
+  using namespace std;
+  for (string shellCommand: SHELL_COMMANDS) {
+    if (command.substr(0, shellCommand.length()) == shellCommand) {
+      return shellCommand + " is a shell builtin";
+    }
+  }
+  return command + ": command not found";
+}
+
 std::string evaluateCommand(std::string command) {
   using namespace std;
   if (command == "exit") {
@@ -20,7 +30,7 @@ std::string evaluateCommand(std::string command) {
   } else if (command.substr(0, 4) == "echo" && command[4] == ' ') {
     return command.substr(5);
   } else if (command.substr(0, 4) == "type" && command[4] == ' '){
-    
+    return typeCommand(command.substr(5));
   }
   return command + ": command not found";
 }
@@ -28,18 +38,6 @@ std::string evaluateCommand(std::string command) {
 void printOutput(std::string output) {
   using namespace std;
   cout<<output<<endl;
-}
-
-
-std::string typeCommand (std::string command) {
-  using namespace std;
-  
-  for (string shellCommand: SHELL_COMMANDS) {
-    if (command.substr(0, shellCommand.length()) == shellCommand) {
-      return shellCommand + " is a shell builtin";
-    }
-  }
-  return command + ": command not found";
 }
 
 
