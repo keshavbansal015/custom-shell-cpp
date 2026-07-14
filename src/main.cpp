@@ -126,7 +126,7 @@ std::string execute(std::string command) {
   using namespace std;
 
   // using execvp
-  // command = cleanInput(command);
+  command = cleanInput(command);
 
   if (command == "") {
     return "";
