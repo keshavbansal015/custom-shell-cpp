@@ -32,7 +32,7 @@ std::string evaluateCommand(std::string command) {
   } else if (command.substr(0, 4) == "type" && command[4] == ' '){
     return typeCommand(command.substr(5));
   }
-  return command + ": command not found";
+  return command + ": not found";
 }
 
 void printOutput(std::string output) {
