@@ -132,12 +132,65 @@ std::string cd(std::string directory) {
 std::string echo(std::string message) {
   using namespace std;
   
-  size_t pos = 0;
-  while ((pos = message.find("'", pos)) != std::string::npos) {
-    message.replace(pos, 1, "");
-    pos += 1;
+  vector<string> args;
+  string current_arg = "";
+  bool in_single_quotes = false;
+  bool in_double_quotes = false;
+  bool has_arg = false;
+  
+  for (size_t i = 0; i < message.length(); ++i) {
+    char c = message[i];
+    if (in_single_quotes) {
+      if (c == '\'') {
+        in_single_quotes = false;
+      } else {
+        current_arg += c;
+      }
+    } else if (in_double_quotes) {
+      if (c == '"') {
+        in_double_quotes = false;
+      } else if (c == '\\' && i + 1 < message.length() && 
+                 (message[i+1] == '"' || message[i+1] == '\\' || message[i+1] == '$' || message[i+1] == '\n')) {
+        current_arg += message[i+1];
+        i++;
+      } else {
+        current_arg += c;
+      }
+    } else {
+      if (c == '\'') {
+        in_single_quotes = true;
+        has_arg = true;
+      } else if (c == '"') {
+        in_double_quotes = true;
+        has_arg = true;
+      } else if (c == ' ') {
+        if (has_arg) {
+          args.push_back(current_arg);
+          current_arg = "";
+          has_arg = false;
+        }
+      } else if (c == '\\' && i + 1 < message.length()) {
+        current_arg += message[i+1];
+        i++;
+        has_arg = true;
+      } else {
+        current_arg += c;
+        has_arg = true;
+      }
+    }
   }
-  return message;
+  if (has_arg) {
+    args.push_back(current_arg);
+  }
+
+  string result = "";
+  for (size_t i = 0; i < args.size(); ++i) {
+    if (i > 0) {
+      result += " ";
+    }
+    result += args[i];
+  }
+  return result;
 }
 
 std::string evaluateCommand(std::string command) {
