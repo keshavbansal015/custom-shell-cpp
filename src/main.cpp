@@ -1,8 +1,9 @@
 #include <iostream>
 #include <string>
 #include <unistd.h>
-
-
+#include <vector>
+#include <sys/wait.h>
+#include <ranges>
 
 #define SHELL_COMMANDS {"echo" , "type" , "exit"}
 #define SHELL_PROMPT "$ "
@@ -29,14 +30,13 @@ std::string findInPATH(std::string command) {
     string fullPath = currDir + "/" + command;
     
     if(access(fullPath.c_str(), F_OK) == 0 && access(fullPath.c_str(), X_OK) == 0) {
-      return command + " is " + fullPath;
+      return fullPath;
     }
 
     prevPos = currPos+1;
     currPos = pathStr.find(":", prevPos);
   }
-  
-  return command + ": not found";
+  return "";
 }
 
 
@@ -50,7 +50,35 @@ std::string typeCommand(std::string command) {
     }
   }
 
-  return findInPATH(command);
+  string output = findInPATH(command);
+  if (output == "") {
+    return command + ": not found";
+  }
+  return command + " is " + output;
+}
+
+std::string execute(std::string command) {
+  using namespace std;
+  
+  // using execvp
+  vector<string> tokens = command 
+                | views::split(' ') 
+                | ranges::to<vector<string>>();
+
+  // converting vector of string to array of char*
+  char** args = new char*[tokens.size() + 1];
+  for (size_t i = 0; i < tokens.size(); i++) {
+    args[i] = (char*)tokens[i].c_str();
+  }
+  args[tokens.size()] = nullptr;
+  
+  if (fork() == 0) {
+    execvp(args[0], args);
+  } else {
+    wait(NULL);
+  }
+  delete[] args;
+  return "";
 }
 
 std::string evaluateCommand(std::string command) {
@@ -61,6 +89,8 @@ std::string evaluateCommand(std::string command) {
     return command.substr(5);
   } else if (command.substr(0, 4) == "type" && command[4] == ' '){
     return typeCommand(command.substr(5));
+  } else {
+    return execute(command);
   }
   return command + ": command not found";
 }
