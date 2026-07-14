@@ -106,7 +106,7 @@ std::string cd(std::string directory) {
   if(chdir(directory.c_str()) == 0) {
     return "";
   }
-  return "cd:" + directory + ": No such file or directory";
+  return "cd: " + directory + ": No such file or directory";
 }
 
 std::string evaluateCommand(std::string command) {
