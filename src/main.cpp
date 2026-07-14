@@ -72,13 +72,21 @@ std::string execute(std::string command) {
   }
   args[tokens.size()] = nullptr;
   
-  if (fork() == 0) {
+  pid_t pid = fork();
+  if (pid == 0) {
     execvp(args[0], args);
+    // If execvp returns, it failed
+    cerr << args[0] << ": command not found" << endl;
+    exit(127);
+  } else if (pid < 0) {
+    delete[] args;
+    return "Error in forking";
   } else {
-    wait(NULL);
+    int status;
+    waitpid(pid, &status, 0);
   }
   delete[] args;
-  return SHELL_PROMPT;
+  return "";
 }
 
 std::string evaluateCommand(std::string command) {
@@ -97,7 +105,9 @@ std::string evaluateCommand(std::string command) {
 
 void printOutput(std::string output) {
   using namespace std;
-  cout<<output<<endl;
+  if (!output.empty()) {
+    cout << output << endl;
+  }
 }
 
 
@@ -117,6 +127,4 @@ int main() {
 
   // TODO: Uncomment the code below to pass the first stage
   shellLoop();
-
-
 }
