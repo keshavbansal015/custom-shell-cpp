@@ -7,7 +7,7 @@
 #include <filesystem>
 
 
-#define SHELL_COMMANDS {"echo" , "type", "pwd" , "exit"}
+#define SHELL_COMMANDS {"echo" , "type", "pwd", "cd" , "exit"}
 #define SHELL_PROMPT "$ "
 
 std::string readInput() {
@@ -97,6 +97,18 @@ std::string pwd() {
    return cwd.string();
 }
 
+
+std::string cd(std::string directory) {
+  using namespace std;
+  if (directory == "") {
+    return "";
+  }
+  if(chdir(directory.c_str()) == 0) {
+    return "";
+  }
+  return "cd:" + directory + ": No such file or directory";
+}
+
 std::string evaluateCommand(std::string command) {
   using namespace std;
   if (command == "exit") {
@@ -107,6 +119,8 @@ std::string evaluateCommand(std::string command) {
     return typeCommand(command.substr(5));
   } else if (command == "pwd") {
     return pwd();
+  } else if (command.substr(0, 2) == "cd" && command[2] == ' '){
+    return cd(command.substr(3));
   } else {
     return execute(command);
   }
