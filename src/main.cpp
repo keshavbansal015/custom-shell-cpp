@@ -4,8 +4,10 @@
 #include <vector>
 #include <sys/wait.h>
 #include <ranges>
+#include <filesystem>
 
-#define SHELL_COMMANDS {"echo" , "type" , "exit"}
+
+#define SHELL_COMMANDS {"echo" , "type", "pwd" , "exit"}
 #define SHELL_PROMPT "$ "
 
 std::string readInput() {
@@ -89,6 +91,12 @@ std::string execute(std::string command) {
   return "";
 }
 
+std::string pwd() {
+   using namespace std;
+   filesystem::path cwd = std::filesystem::current_path();
+   return cwd.string();
+}
+
 std::string evaluateCommand(std::string command) {
   using namespace std;
   if (command == "exit") {
@@ -97,10 +105,11 @@ std::string evaluateCommand(std::string command) {
     return command.substr(5);
   } else if (command.substr(0, 4) == "type" && command[4] == ' '){
     return typeCommand(command.substr(5));
+  } else if (command == "pwd") {
+    return pwd();
   } else {
     return execute(command);
   }
-  return command + ": command not found";
 }
 
 void printOutput(std::string output) {
