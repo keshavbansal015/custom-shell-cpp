@@ -11,6 +11,10 @@ std::string readInput() {
 }
 
 std::string evaluateCommand(std::string command) {
+  using namespace std;
+  if (command == "exit") {
+    exit(0); 
+  }
   return command + ": command not found";
 }
 
