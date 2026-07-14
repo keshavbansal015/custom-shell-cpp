@@ -20,7 +20,7 @@ std::string typeCommand(std::string command) {
       return shellCommand + " is a shell builtin";
     }
   }
-  return command + ": command not found";
+  return command + ": not found";
 }
 
 std::string evaluateCommand(std::string command) {
@@ -32,7 +32,7 @@ std::string evaluateCommand(std::string command) {
   } else if (command.substr(0, 4) == "type" && command[4] == ' '){
     return typeCommand(command.substr(5));
   }
-  return command + ": not found";
+  return command + ": command not found";
 }
 
 void printOutput(std::string output) {
