@@ -78,7 +78,7 @@ std::string execute(std::string command) {
     wait(NULL);
   }
   delete[] args;
-  return "";
+  return SHELL_PROMPT;
 }
 
 std::string evaluateCommand(std::string command) {
