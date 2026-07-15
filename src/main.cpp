@@ -69,11 +69,23 @@ std::vector<std::string> getMatchingCommands(const std::string& prefix) {
     }
   }
   
-  vector<string>* matching_commands = new vector<string>(unique_matches.begin(), unique_matches.end());
-  sort(matching_commands->begin(), matching_commands->end());
-  return *matching_commands;
+  vector<string> matching_commands(unique_matches.begin(), unique_matches.end());
+  sort(matching_commands.begin(), matching_commands.end());
+  return matching_commands;
 }
 
+std::string getLongestCommonPrefix(const std::vector<std::string>& matches) {
+  using namespace std;
+  if (matches.empty()) return "";
+  string prefix = matches[0];
+  for (size_t i = 1; i < matches.size(); ++i) {
+    while (matches[i].find(prefix) != 0) {
+      prefix = prefix.substr(0, prefix.length() - 1);
+      if (prefix.empty()) return "";
+    }
+  }
+  return prefix;
+}
 
 std::string readInput() {
   using namespace std;
@@ -82,9 +94,7 @@ std::string readInput() {
   string command = "";
   enableRawMode();
   
-  string original_prefix = "";
-  vector<string> matches;
-  int cycle_index = -1;
+  int last_tab_count = 0;
   
   while (true) {
     char c;
@@ -96,37 +106,53 @@ std::string readInput() {
       cout << endl;
       break;
     } else if (c == 127 || c == 8) {
-      cycle_index = -1;
-      original_prefix = "";
+      last_tab_count = 0;
       if (!command.empty()) {
         command.pop_back();
         cout << "\b \b" << flush;
       }
     } else if (c == '\t') {
-      if (cycle_index == -1) {
-        original_prefix = command;
-        matches = getMatchingCommands(original_prefix);
-        if (matches.empty()) {
-          cout << "\a" << flush;
-        } else {
-          cycle_index = 0;
-          for (size_t i = 0; i < command.length(); ++i) {
-            cout << "\b \b";
-          }
-          cout << matches[cycle_index] << flush;
-          command = matches[cycle_index];
-        }
+      last_tab_count++;
+      vector<string> matches = getMatchingCommands(command);
+      if (matches.empty()) {
+        cout << "\a" << flush;
+        last_tab_count = 0;
       } else {
-        cycle_index = (cycle_index + 1) % matches.size();
-        for (size_t i = 0; i < command.length(); ++i) {
-          cout << "\b \b";
+        string lcp = getLongestCommonPrefix(matches);
+        if (lcp.length() > command.length()) {
+          string suffix = lcp.substr(command.length());
+          if (matches.size() == 1) {
+            suffix += " ";
+            command = lcp + " ";
+          } else {
+            command = lcp;
+          }
+          cout << suffix << flush;
+          last_tab_count = 0;
+        } else {
+          if (matches.size() == 1) {
+            if (command.empty() || command.back() != ' ') {
+              cout << " " << flush;
+              command += " ";
+            }
+            last_tab_count = 0;
+          } else {
+            if (last_tab_count == 1) {
+              cout << "\a" << flush;
+            } else if (last_tab_count == 2) {
+              cout << "\n";
+              for (size_t i = 0; i < matches.size(); ++i) {
+                if (i > 0) cout << "  ";
+                cout << matches[i];
+              }
+              cout << "\n" << SHELL_PROMPT << command << flush;
+              last_tab_count = 0;
+            }
+          }
         }
-        cout << matches[cycle_index] << " " << flush;
-        command = matches[cycle_index];
       }
     } else if (isprint(c)) {
-      cycle_index = -1;
-      original_prefix = "";
+      last_tab_count = 0;
       command += c;
       cout << c << flush;
     }
