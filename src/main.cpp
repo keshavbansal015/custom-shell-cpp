@@ -1,16 +1,17 @@
+#include <algorithm>
 #include <filesystem>
 #include <fcntl.h>
 #include <iostream>
+#include <set>
 #include <string>
 #include <sys/wait.h>
-#include <system_error>
 #include <termios.h>
-#include <vector>
-#include <set>
-#include <algorithm>
 #include <unistd.h>
+#include <vector>
+#include <cctype>
+#include <system_error>
 
-#define SHELL_COMMANDS {"echo", "type", "pwd", "cd", "exit"}
+#define BUILTINS {"echo", "type", "pwd", "cd", "exit"}
 #define SHELL_PROMPT "$ "
 
 struct termios orig_termios;
@@ -29,7 +30,7 @@ void enableRawMode() {
 std::vector<std::string> getMatchingCommands(const std::string& prefix) {
   using namespace std;
   set<string> unique_matches;
-  vector<string> builtins = SHELL_COMMANDS;
+  vector<string> builtins = BUILTINS;
   
   for (const string& b : builtins) {
     if (b.rfind(prefix, 0) == 0) {
@@ -47,7 +48,7 @@ std::vector<std::string> getMatchingCommands(const std::string& prefix) {
       if (!currDir.empty()) {
         try {
           if (filesystem::exists(currDir) && filesystem::is_directory(currDir)) {
-            for (const auto& entry : filesystem::directory_iterator(currDir)) {
+            for (const filesystem::directory_entry& entry : filesystem::directory_iterator(currDir)) {
               string filename = entry.path().filename().string();
               if (filename.rfind(prefix, 0) == 0) {
                 if (access(entry.path().c_str(), X_OK) == 0) {
@@ -68,8 +69,11 @@ std::vector<std::string> getMatchingCommands(const std::string& prefix) {
     }
   }
   
-  return vector<string>(unique_matches.begin(), unique_matches.end());
+  vector<string>* matching_commands = new vector<string>(unique_matches.begin(), unique_matches.end());
+  sort(matching_commands->begin(), matching_commands->end());
+  return *matching_commands;
 }
+
 
 std::string readInput() {
   using namespace std;
@@ -78,7 +82,9 @@ std::string readInput() {
   string command = "";
   enableRawMode();
   
-  int last_tab_count = 0;
+  string original_prefix = "";
+  vector<string> matches;
+  int cycle_index = -1;
   
   while (true) {
     char c;
@@ -90,38 +96,43 @@ std::string readInput() {
       cout << endl;
       break;
     } else if (c == 127 || c == 8) {
-      last_tab_count = 0;
+      cycle_index = -1;
+      original_prefix = "";
       if (!command.empty()) {
         command.pop_back();
         cout << "\b \b" << flush;
       }
     } else if (c == '\t') {
-      last_tab_count++;
-      vector<string> matches = getMatchingCommands(command);
-      if (matches.empty()) {
-        cout << "\a" << flush;
-        last_tab_count = 0;
-      } else if (matches.size() == 1) {
-        string completed = matches[0];
-        string suffix = completed.substr(command.length()) + " ";
-        cout << suffix << flush;
-        command = completed + " ";
-        last_tab_count = 0;
-      } else {
-        if (last_tab_count == 1) {
+      if (cycle_index == -1) {
+        original_prefix = command;
+        matches = getMatchingCommands(original_prefix);
+        if (matches.empty()) {
           cout << "\a" << flush;
-        } else if (last_tab_count == 2) {
-          cout << "\n";
-          for (size_t i = 0; i < matches.size(); ++i) {
-            if (i > 0) cout << "  ";
-            cout << matches[i];
+        } else {
+          // sort(matches.begin(), matches.end(), [](const string& a, const string& b) {
+          //   if (a.length() != b.length()) {
+          //     return a.length() < b.length();
+          //   }
+          //   return a < b;
+          // });
+          cycle_index = 0;
+          for (size_t i = 0; i < command.length(); ++i) {
+            cout << "\b \b";
           }
-          cout << "\n" << SHELL_PROMPT << command << flush;
-          last_tab_count = 0;
+          cout << matches[cycle_index] << flush;
+          command = matches[cycle_index];
         }
+      } else {
+        cycle_index = (cycle_index + 1) % matches.size();
+        for (size_t i = 0; i < command.length(); ++i) {
+          cout << "\b \b";
+        }
+        cout << matches[cycle_index] << flush;
+        command = matches[cycle_index];
       }
     } else if (isprint(c)) {
-      last_tab_count = 0;
+      cycle_index = -1;
+      original_prefix = "";
       command += c;
       cout << c << flush;
     }
@@ -159,7 +170,7 @@ std::string typeCommand(std::string command) {
   using namespace std;
 
   // check if the command is a shell builtin
-  for (string shellCommand : SHELL_COMMANDS) {
+  for (string shellCommand : BUILTINS) {
     if (command.substr(0, shellCommand.length()) == shellCommand) {
       return shellCommand + " is a shell builtin";
     }
