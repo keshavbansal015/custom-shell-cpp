@@ -127,7 +127,7 @@ std::string readInput() {
         for (size_t i = 0; i < command.length(); ++i) {
           cout << "\b \b";
         }
-        cout << matches[cycle_index] << flush;
+        cout << matches[cycle_index] << " " << flush;
         command = matches[cycle_index];
       }
     } else if (isprint(c)) {
