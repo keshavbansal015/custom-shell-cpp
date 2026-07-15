@@ -109,22 +109,16 @@ std::string readInput() {
         if (matches.empty()) {
           cout << "\a" << flush;
         } else {
-          // sort(matches.begin(), matches.end(), [](const string& a, const string& b) {
-          //   if (a.length() != b.length()) {
-          //     return a.length() < b.length();
-          //   }
-          //   return a < b;
-          // });
           cycle_index = 0;
           for (size_t i = 0; i < command.length(); ++i) {
             cout << "\b \b";
           }
-          cout << matches[cycle_index] << flush;
+          cout << matches[cycle_index] << " " << flush;
           command = matches[cycle_index];
         }
       } else {
         cycle_index = (cycle_index + 1) % matches.size();
-        for (size_t i = 0; i < command.length(); ++i) {
+        for (size_t i = 0; i < command.length()+1; ++i) {
           cout << "\b \b";
         }
         cout << matches[cycle_index] << " " << flush;
