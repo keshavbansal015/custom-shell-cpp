@@ -1,20 +1,133 @@
 #include <filesystem>
+#include <fcntl.h>
 #include <iostream>
-#include <ranges>
 #include <string>
 #include <sys/wait.h>
 #include <system_error>
-#include <unistd.h>
+#include <termios.h>
 #include <vector>
+#include <set>
+#include <algorithm>
+#include <unistd.h>
 
 #define SHELL_COMMANDS {"echo", "type", "pwd", "cd", "exit"}
 #define SHELL_PROMPT "$ "
 
+struct termios orig_termios;
+
+void disableRawMode() {
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+}
+
+void enableRawMode() {
+  tcgetattr(STDIN_FILENO, &orig_termios);
+  struct termios raw = orig_termios;
+  raw.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+}
+
+std::vector<std::string> getMatchingCommands(const std::string& prefix) {
+  using namespace std;
+  set<string> unique_matches;
+  vector<string> builtins = SHELL_COMMANDS;
+  
+  for (const string& b : builtins) {
+    if (b.rfind(prefix, 0) == 0) {
+      unique_matches.insert(b);
+    }
+  }
+  
+  char *path = getenv("PATH");
+  if (path) {
+    string pathStr = path;
+    size_t prevPos = 0;
+    size_t currPos = pathStr.find(":");
+    while (prevPos < pathStr.length()) {
+      string currDir = pathStr.substr(prevPos, currPos - prevPos);
+      if (!currDir.empty()) {
+        try {
+          if (filesystem::exists(currDir) && filesystem::is_directory(currDir)) {
+            for (const auto& entry : filesystem::directory_iterator(currDir)) {
+              string filename = entry.path().filename().string();
+              if (filename.rfind(prefix, 0) == 0) {
+                if (access(entry.path().c_str(), X_OK) == 0) {
+                  unique_matches.insert(filename);
+                }
+              }
+            }
+          }
+        } catch (...) {
+          // Ignore directory access errors
+        }
+      }
+      if (currPos == string::npos) {
+        break;
+      }
+      prevPos = currPos + 1;
+      currPos = pathStr.find(":", prevPos);
+    }
+  }
+  
+  return vector<string>(unique_matches.begin(), unique_matches.end());
+}
+
 std::string readInput() {
   using namespace std;
-  cout << SHELL_PROMPT;
-  string command;
-  getline(cin, command);
+  cout << SHELL_PROMPT << flush;
+  
+  string command = "";
+  enableRawMode();
+  
+  int last_tab_count = 0;
+  
+  while (true) {
+    char c;
+    if (read(STDIN_FILENO, &c, 1) <= 0) {
+      break;
+    }
+    
+    if (c == '\n' || c == '\r') {
+      cout << endl;
+      break;
+    } else if (c == 127 || c == 8) {
+      last_tab_count = 0;
+      if (!command.empty()) {
+        command.pop_back();
+        cout << "\b \b" << flush;
+      }
+    } else if (c == '\t') {
+      last_tab_count++;
+      vector<string> matches = getMatchingCommands(command);
+      if (matches.empty()) {
+        cout << "\a" << flush;
+        last_tab_count = 0;
+      } else if (matches.size() == 1) {
+        string completed = matches[0];
+        string suffix = completed.substr(command.length()) + " ";
+        cout << suffix << flush;
+        command = completed + " ";
+        last_tab_count = 0;
+      } else {
+        if (last_tab_count == 1) {
+          cout << "\a" << flush;
+        } else if (last_tab_count == 2) {
+          cout << "\n";
+          for (size_t i = 0; i < matches.size(); ++i) {
+            if (i > 0) cout << "  ";
+            cout << matches[i];
+          }
+          cout << "\n" << SHELL_PROMPT << command << flush;
+          last_tab_count = 0;
+        }
+      }
+    } else if (isprint(c)) {
+      last_tab_count = 0;
+      command += c;
+      cout << c << flush;
+    }
+  }
+  
+  disableRawMode();
   return command;
 }
 
