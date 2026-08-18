@@ -1,18 +1,18 @@
 #include "parser.h"
 #include <sstream>
 
-std::vector<std::string> stringSplit(const std::string &str, char delimiter) {
-  std::vector<std::string> tokens;
-  std::string token;
-  std::istringstream tokenStream(str);
-  while (std::getline(tokenStream, token, delimiter)) {
+vector<string> stringSplit(const string &str, char delimiter) {
+  vector<string> tokens;
+  string token;
+  istringstream tokenStream(str);
+  while (getline(tokenStream, token, delimiter)) {
     tokens.push_back(token);
   }
   return tokens;
 }
 
 // This function parses the command line to determine what needs to be completed
-TokenInfo parseCompletionTarget(const std::string &command) {
+TokenInfo parseCompletionTarget(const string &command) {
   TokenInfo info;
   info.is_command = true;
 
@@ -82,7 +82,7 @@ TokenInfo parseCompletionTarget(const std::string &command) {
 
   // active token contains a slash so it is a path completion
   if (has_non_space_before ||
-      info.active_token.find('/') != std::string::npos) {
+      info.active_token.find('/') != string::npos) {
     info.is_command = false;
   }
 
@@ -91,8 +91,8 @@ TokenInfo parseCompletionTarget(const std::string &command) {
 
 // This function cleans the path token by removing quotes and escape characters
 // example: "dir/" -> "dir/", "'dir'" -> "dir", "\"dir\"" -> "dir", "" -> ""
-std::string cleanPathToken(const std::string &token) {
-  std::string result = "";
+string cleanPathToken(const string &token) {
+  string result = "";
   bool in_single = false;
   bool in_double = false;
   for (size_t i = 0; i < token.length(); ++i) {
@@ -128,10 +128,10 @@ std::string cleanPathToken(const std::string &token) {
 }
 
 // This function splits a path into a directory and a prefix
-void splitPath(const std::string &path, std::string &dir, std::string &prefix) {
+void splitPath(const string &path, string &dir, string &prefix) {
   size_t last_slash = path.find_last_of('/');
   if (last_slash ==
-      std::string::npos) { // example: path = "dir", dir = ".", prefix = "dir"
+      string::npos) { // example: path = "dir", dir = ".", prefix = "dir"
     dir = ".";
     prefix = path;
   } else if (last_slash ==
@@ -144,7 +144,7 @@ void splitPath(const std::string &path, std::string &dir, std::string &prefix) {
   }
 }
 
-std::vector<std::string> parseArguments(std::string &message) {
+vector<string> parseArguments(string &message) {
   using namespace std;
   vector<string> args;
   string current_arg = "";
@@ -200,7 +200,7 @@ std::vector<std::string> parseArguments(std::string &message) {
   return args;
 }
 
-std::string cleanInput(std::string &message) {
+string cleanInput(string &message) {
   using namespace std;
   vector<string> args = parseArguments(message);
   string result = "";

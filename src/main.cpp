@@ -13,7 +13,7 @@
 
 #define SHELL_PROMPT "$ "
 
-std::string readInput() {
+string readInput() {
   using namespace std;
   cout << SHELL_PROMPT << flush;
 
@@ -122,9 +122,9 @@ void shellLoop() {
 }
 
 int main() {
-  // Flush after every std::cout / std:cerr
-  std::cout << std::unitbuf;
-  std::cerr << std::unitbuf;
+  // Flush after every cout / std:cerr
+  cout << unitbuf;
+  cerr << unitbuf;
 
   shellLoop();
 }

@@ -3,15 +3,16 @@
 #include <string>
 #include <vector>
 
-inline const std::vector<std::string> BUILTINS = {"echo", "type", "pwd", "cd", "exit"};
-std::string findInPATH(const std::string &command);
-std::string typeCommand(const std::string &command);
-std::string execute(std::string &command);
-std::string pwd();
-std::string cd(std::string directory);
-std::string echo(std::string message);
-std::string evaluateCommand(std::string command);
-void printOutput(std::string output);
+using namespace std;
+inline const vector<string> BUILTINS = {"echo", "type", "pwd", "cd", "exit"};
+string findInPATH(const string &command);
+string typeCommand(const string &command);
+string execute(string &command);
+string pwd();
+string cd(string directory);
+string echo(string message);
+string evaluateCommand(string command);
+void printOutput(string output);
 
 #endif
 

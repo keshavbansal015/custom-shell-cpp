@@ -6,9 +6,7 @@
 #include <unistd.h>
 #include "commands.h"
 
-using namespace std;
-
-std::vector<std::string> getMatchingCommands(const std::string &prefix) {
+vector<string> getMatchingCommands(const string &prefix) {
   set<string> unique_matches;
   vector<string> builtins = BUILTINS;
 
@@ -42,7 +40,7 @@ std::vector<std::string> getMatchingCommands(const std::string &prefix) {
   return matching_commands;
 }
 
-std::string getLongestCommonPrefix(const std::vector<std::string> &matches) {
+string getLongestCommonPrefix(const vector<string> &matches) {
   if (matches.empty())
     return "";
   string prefix = matches[0];
@@ -57,7 +55,7 @@ std::string getLongestCommonPrefix(const std::vector<std::string> &matches) {
 }
 
 // This function gets the matching paths
-std::vector<std::string> getMatchingPaths(const std::string &active_token) {
+vector<string> getMatchingPaths(const string &active_token) {
   vector<string> matches;
   string clean_token = cleanPathToken(active_token);
 

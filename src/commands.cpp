@@ -5,14 +5,12 @@
 #include <string>
 #include <unistd.h>
 
-using namespace std;
-
-std::string pwd() {
-  filesystem::path cwd = std::filesystem::current_path();
+string pwd() {
+  filesystem::path cwd = filesystem::current_path();
   return cwd.string();
 }
 
-std::string cd(std::string directory) {
+string cd(string directory) {
   if (directory == "") {
     return "";
   }
@@ -41,7 +39,7 @@ std::string cd(std::string directory) {
   return "cd: " + directory + ": No such file or directory";
 }
 
-std::string findInPATH(const std::string &command) {
+string findInPATH(const string &command) {
   char *path = getenv("PATH");
   string pathStr = path;
 
@@ -64,7 +62,7 @@ std::string findInPATH(const std::string &command) {
   return "";
 }
 
-std::string typeCommand(const std::string &command) {
+string typeCommand(const string &command) {
   // check if the command is a shell builtin
   for (string shellCommand : BUILTINS) {
     if (command.substr(0, shellCommand.length()) == shellCommand) {
@@ -79,7 +77,7 @@ std::string typeCommand(const std::string &command) {
   return command + " is " + output;
 }
 
-std::string execute(std::string &command) {
+string execute(string &command) {
   vector<string> tokens = parseArguments(command);
   if (tokens.empty()) {
     return "";
@@ -107,10 +105,9 @@ std::string execute(std::string &command) {
   }
   return "";
 }
+string echo(string message) { return cleanInput(message); }
 
-std::string echo(std::string message) { return cleanInput(message); }
-
-std::string evaluateCommand(std::string command) {
+string evaluateCommand(string command) {
   if (command == "exit") {
     exit(0);
   } else if (command.substr(0, 4) == "echo" && command[4] == ' ') {
@@ -126,7 +123,7 @@ std::string evaluateCommand(std::string command) {
   }
 }
 
-void printOutput(std::string output) {
+void printOutput(string output) {
   if (!output.empty()) {
     cout << output << endl;
   }
