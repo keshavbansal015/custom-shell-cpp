@@ -16,15 +16,16 @@
 
 struct termios orig_termios;
 
+// This sets the terminal to its original state
 void disableRawMode() {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
 }
-
+// This sets the terminal to raw mode
 void enableRawMode() {
   tcgetattr(STDIN_FILENO, &orig_termios);
   struct termios raw = orig_termios;
-  raw.c_lflag &= ~(ICANON | ECHO);
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+  raw.c_lflag &= ~(ICANON | ECHO); // ICANON -> disable canonical mode, ECHO -> disable echo
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw); // TCSAFLUSH -> flush the terminal buffer and wait for all output to be written
 }
 
 std::vector<std::string> getMatchingCommands(const std::string& prefix) {
@@ -38,13 +39,13 @@ std::vector<std::string> getMatchingCommands(const std::string& prefix) {
     }
   }
   
-  char *path = getenv("PATH");
+  char *path = getenv("PATH"); // PATH is a colon separated list of directories
   if (path) {
-    string pathStr = path;
+    string pathStr = path; // convert to string
     size_t prevPos = 0;
     size_t currPos = pathStr.find(":");
     while (prevPos < pathStr.length()) {
-      string currDir = pathStr.substr(prevPos, currPos - prevPos);
+      string currDir = pathStr.substr(prevPos, currPos - prevPos); // get current directory
       if (!currDir.empty()) {
         try {
           if (filesystem::exists(currDir) && filesystem::is_directory(currDir)) {
@@ -87,6 +88,169 @@ std::string getLongestCommonPrefix(const std::vector<std::string>& matches) {
   return prefix;
 }
 
+struct TokenInfo {
+  std::string base_prefix;
+  std::string active_token;
+  bool is_command;
+};
+
+TokenInfo parseCompletionTarget(const std::string& command) {
+  TokenInfo info;
+  info.is_command = true;
+  
+  if (command.empty()) {
+    info.base_prefix = "";
+    info.active_token = "";
+    return info;
+  }
+
+  size_t last_token_start = 0;
+  bool in_single_quotes = false;
+  bool in_double_quotes = false;
+  bool last_was_space = true;
+  
+  for (size_t i = 0; i < command.length(); ++i) {
+    char c = command[i];
+    if (in_single_quotes) {
+      if (c == '\'') {
+        in_single_quotes = false;
+      }
+    } else if (in_double_quotes) {
+      if (c == '"') {
+        in_double_quotes = false;
+      } else if (c == '\\' && i + 1 < command.length()) {
+        i++;
+      }
+    } else {
+      if (c == '\'') {
+        in_single_quotes = true;
+        if (last_was_space) {
+          last_token_start = i;
+          last_was_space = false;
+        }
+      } else if (c == '"') {
+        in_double_quotes = true;
+        if (last_was_space) {
+          last_token_start = i;
+          last_was_space = false;
+        }
+      } else if (c == ' ') {
+        last_was_space = true;
+      } else if (c == '\\' && i + 1 < command.length()) {
+        if (last_was_space) {
+          last_token_start = i;
+          last_was_space = false;
+        }
+        i++;
+      } else {
+        if (last_was_space) {
+          last_token_start = i;
+          last_was_space = false;
+        }
+      }
+    }
+  }
+
+  info.base_prefix = command.substr(0, last_token_start);
+  info.active_token = command.substr(last_token_start);
+  
+  bool has_non_space_before = false;
+  for (char c : info.base_prefix) {
+    if (c != ' ') {
+      has_non_space_before = true;
+      break;
+    }
+  }
+  
+  if (has_non_space_before || info.active_token.find('/') != std::string::npos) {
+    info.is_command = false;
+  }
+  
+  return info;
+}
+
+std::string cleanPathToken(const std::string& token) {
+  std::string result = "";
+  bool in_single = false;
+  bool in_double = false;
+  for (size_t i = 0; i < token.length(); ++i) {
+    char c = token[i];
+    if (in_single) {
+      if (c == '\'') in_single = false;
+      else result += c;
+    } else if (in_double) {
+      if (c == '"') in_double = false;
+      else if (c == '\\' && i + 1 < token.length()) {
+        result += token[i+1];
+        i++;
+      } else {
+        result += c;
+      }
+    } else {
+      if (c == '\'') in_single = true;
+      else if (c == '"') in_double = true;
+      else if (c == '\\' && i + 1 < token.length()) {
+        result += token[i+1];
+        i++;
+      } else {
+        result += c;
+      }
+    }
+  }
+  return result;
+}
+
+void splitPath(const std::string& path, std::string& dir, std::string& prefix) {
+  size_t last_slash = path.find_last_of('/');
+  if (last_slash == std::string::npos) {
+    dir = ".";
+    prefix = path;
+  } else if (last_slash == 0) {
+    dir = "/";
+    prefix = path.substr(1);
+  } else {
+    dir = path.substr(0, last_slash);
+    prefix = path.substr(last_slash + 1);
+  }
+}
+
+std::vector<std::string> getMatchingPaths(const std::string& active_token) {
+  using namespace std;
+  vector<string> matches;
+  string clean_token = cleanPathToken(active_token);
+  
+  string dir, prefix;
+  splitPath(clean_token, dir, prefix);
+  
+  try {
+    if (filesystem::exists(dir) && filesystem::is_directory(dir)) {
+      for (const auto& entry : filesystem::directory_iterator(dir)) {
+        string filename = entry.path().filename().string();
+        if (filename.rfind(".", 0) == 0 && prefix.rfind(".", 0) != 0) {
+          continue;
+        }
+        if (filename.rfind(prefix, 0) == 0) {
+          string match_path = "";
+          if (clean_token.find_last_of('/') != string::npos) {
+            match_path = clean_token.substr(0, clean_token.find_last_of('/') + 1) + filename;
+          } else {
+            match_path = filename;
+          }
+          
+          if (entry.is_directory()) {
+            match_path += "/";
+          }
+          matches.push_back(match_path);
+        }
+      }
+    }
+  } catch (...) {
+  }
+  
+  sort(matches.begin(), matches.end());
+  return matches;
+}
+
 std::string readInput() {
   using namespace std;
   cout << SHELL_PROMPT << flush;
@@ -98,42 +262,51 @@ std::string readInput() {
   
   while (true) {
     char c;
-    if (read(STDIN_FILENO, &c, 1) <= 0) {
+    if (read(STDIN_FILENO, &c, 1) <= 0) { // reads a character from the standard input, 0 if EOF, -1 on error
       break;
     }
     
-    if (c == '\n' || c == '\r') {
+    if (c == '\n' || c == '\r') { // newline or carriage return
       cout << endl;
       break;
-    } else if (c == 127 || c == 8) {
+    } else if (c == 127 || c == 8) { // backspace or delete
       last_tab_count = 0;
-      if (!command.empty()) {
-        command.pop_back();
-        cout << "\b \b" << flush;
+      if (!command.empty()) { // check command because command could be empty and it would lead to segmentation fault
+        command.pop_back(); // remove last character
+        cout << "\b \b" << flush; // 1. move cursor back, 2. print space, 3. move cursor back again
       }
-    } else if (c == '\t') {
+    } else if (c == '\t') { // tab
       last_tab_count++;
-      vector<string> matches = getMatchingCommands(command);
+      TokenInfo target = parseCompletionTarget(command);
+      vector<string> matches;
+      if (target.is_command) {
+        matches = getMatchingCommands(target.active_token);
+      } else {
+        matches = getMatchingPaths(target.active_token);
+      }
+
       if (matches.empty()) {
-        cout << "\a" << flush;
+        cout << "\a" << flush; // beep
         last_tab_count = 0;
       } else {
         string lcp = getLongestCommonPrefix(matches);
-        if (lcp.length() > command.length()) {
-          string suffix = lcp.substr(command.length());
-          if (matches.size() == 1) {
+        if (lcp.length() > target.active_token.length()) {
+          string suffix = lcp.substr(target.active_token.length());
+          if (matches.size() == 1 && !matches[0].empty() && matches[0].back() != '/') {
             suffix += " ";
-            command = lcp + " ";
+            command = target.base_prefix + lcp + " ";
           } else {
-            command = lcp;
+            command = target.base_prefix + lcp;
           }
           cout << suffix << flush;
           last_tab_count = 0;
         } else {
           if (matches.size() == 1) {
-            if (command.empty() || command.back() != ' ') {
-              cout << " " << flush;
-              command += " ";
+            if (target.active_token.empty() || (target.active_token.back() != ' ' && matches[0].back() != '/')) {
+              if (matches[0].back() != '/') {
+                cout << " " << flush;
+                command += " ";
+              }
             }
             last_tab_count = 0;
           } else {
@@ -143,7 +316,14 @@ std::string readInput() {
               cout << "\n";
               for (size_t i = 0; i < matches.size(); ++i) {
                 if (i > 0) cout << "  ";
-                cout << matches[i];
+                string display_name = matches[i];
+                if (!target.is_command) {
+                  size_t slash_pos = matches[i].find_last_of('/', matches[i].length() - 2);
+                  if (slash_pos != string::npos) {
+                    display_name = matches[i].substr(slash_pos + 1);
+                  }
+                }
+                cout << display_name;
               }
               cout << "\n" << SHELL_PROMPT << command << flush;
               last_tab_count = 0;
@@ -151,14 +331,14 @@ std::string readInput() {
           }
         }
       }
-    } else if (isprint(c)) {
+    } else if (isprint(c)) { // printable character
       last_tab_count = 0;
       command += c;
       cout << c << flush;
     }
   }
   
-  disableRawMode();
+  disableRawMode(); // to restore the terminal to its original state
   return command;
 }
 
@@ -299,7 +479,7 @@ std::string execute(std::string command) {
     return "Error in forking";
   } else {
     int status;
-    waitpid(pid, &status, 0);
+    waitpid(pid, &status, 0); 
   }
   delete[] args;
   return "";
@@ -381,6 +561,5 @@ int main() {
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  // TODO: Uncomment the code below to pass the first stage
   shellLoop();
 }
