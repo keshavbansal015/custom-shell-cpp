@@ -109,6 +109,9 @@ string execute(const string &command) {
 }
 string echo(const string &message) { return cleanInput(message); }
 
+// Map to store command completion specifications
+unordered_map<string, string> completion_specs;
+
 string completeCommand(const string &command) {
   vector<string> tokens = parseArguments(command);
   if (tokens.empty())
