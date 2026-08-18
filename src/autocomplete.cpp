@@ -1,11 +1,11 @@
 #include "autocomplete.h"
+#include "commands.h"
 #include "parser.h"
 #include <algorithm>
-#include <set>
-#include <filesystem>
-#include <unistd.h>
-#include "commands.h"
 #include <cstdio>
+#include <filesystem>
+#include <set>
+#include <unistd.h>
 
 vector<string> getMatchingCommands(const string &prefix) {
   set<string> unique_matches;
@@ -96,20 +96,23 @@ vector<string> getMatchingPaths(const string &active_token) {
   return matches;
 }
 
-
-
-vector<string> runCompleter(const string &completer_path, const string &cmd_name, const string &current_word, const string &previous_word, const string &full_line) {
+vector<string> runCompleter(const string &completer_path,
+                            const string &cmd_name, const string &current_word,
+                            const string &previous_word,
+                            const string &full_line) {
   setenv("COMP_LINE", full_line.c_str(), 1);
   setenv("COMP_POINT", to_string(full_line.length()).c_str(), 1);
   setenv("COMP_KEY", "9", 1);
   setenv("COMP_TYPE", "9", 1);
 
-  string exec_cmd = completer_path + " '" + cmd_name + "' '" + current_word + "' '" + previous_word + "'";
-  
+  string exec_cmd = completer_path + " '" + cmd_name + "' '" + current_word +
+                    "' '" + previous_word + "'";
+
   vector<string> results;
-  FILE* pipe = popen(exec_cmd.c_str(), "r");
-  if (!pipe) return results;
-  
+  FILE *pipe = popen(exec_cmd.c_str(), "r");
+  if (!pipe)
+    return results;
+
   char buffer[128];
   string line = "";
   while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {

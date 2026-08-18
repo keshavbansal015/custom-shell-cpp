@@ -43,22 +43,40 @@ string readInput() {
     } else if (c == '\t') { // tab
       last_tab_count++;
       TokenInfo target = parseCompletionTarget(command);
-      vector<string> matches;
-      if (target.is_command) {
-        matches = getMatchingCommands(target.active_token);
-      } else {
-        matches = getMatchingPaths(target.active_token);
+      vector<string> cmd_tokens = parseArguments(command);
+      bool ran_programmable = false;
+      if (!cmd_tokens.empty() && completion_specs.count(cmd_tokens[0])) {
+        string cmd_name = cmd_tokens[0];
+        string current_word = target.active_token;
+        string previous_word = "";
+        if (target.active_token.empty()) {
+          previous_word = cmd_tokens.back();
+        } else {
+          if (cmd_tokens.size() > 1) {
+            previous_word = cmd_tokens[cmd_tokens.size() - 2];
+          }
+        }
+        cmd_tokens = runCompleter(completion_specs[cmd_name], cmd_name, current_word, previous_word, command);
+        ran_programmable = true;
       }
 
-      if (matches.empty()) {
+      if (!ran_programmable) {
+        if (target.is_command) {
+          cmd_tokens = getMatchingCommands(target.active_token);
+        } else {
+          cmd_tokens = getMatchingPaths(target.active_token);
+        }
+      }
+
+      if (cmd_tokens.empty()) {
         cout << "\a" << flush; // beep
         last_tab_count = 0;
       } else {
-        string lcp = getLongestCommonPrefix(matches);
+        string lcp = getLongestCommonPrefix(cmd_tokens);
         if (lcp.length() > target.active_token.length()) {
           string suffix = lcp.substr(target.active_token.length());
-          if (matches.size() == 1 && !matches[0].empty() &&
-              matches[0].back() != '/') {
+          if (cmd_tokens.size() == 1 && !cmd_tokens[0].empty() &&
+              cmd_tokens[0].back() != '/') {
             suffix += " ";
             command = target.base_prefix + lcp + " ";
           } else {
@@ -67,11 +85,11 @@ string readInput() {
           cout << suffix << flush;
           last_tab_count = 0;
         } else {
-          if (matches.size() == 1) {
+          if (cmd_tokens.size() == 1) {
             if (target.active_token.empty() ||
                 (target.active_token.back() != ' ' &&
-                 matches[0].back() != '/')) {
-              if (matches[0].back() != '/') {
+                 cmd_tokens[0].back() != '/')) {
+              if (cmd_tokens[0].back() != '/') {
                 cout << " " << flush;
                 command += " ";
               }
@@ -82,15 +100,15 @@ string readInput() {
               cout << "\a" << flush;
             } else if (last_tab_count == 2) {
               cout << "\n";
-              for (size_t i = 0; i < matches.size(); ++i) {
+              for (size_t i = 0; i < cmd_tokens.size(); ++i) {
                 if (i > 0)
                   cout << "  ";
-                string display_name = matches[i];
+                string display_name = cmd_tokens[i];
                 if (!target.is_command) {
                   size_t slash_pos =
-                      matches[i].find_last_of('/', matches[i].length() - 2);
+                      cmd_tokens[i].find_last_of('/', cmd_tokens[i].length() - 2);
                   if (slash_pos != string::npos) {
-                    display_name = matches[i].substr(slash_pos + 1);
+                    display_name = cmd_tokens[i].substr(slash_pos + 1);
                   }
                 }
                 cout << display_name;
