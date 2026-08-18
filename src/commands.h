@@ -4,7 +4,7 @@
 #include <vector>
 
 using namespace std;
-inline const vector<string> BUILTINS = {"echo", "type", "pwd", "cd", "exit"};
+inline const vector<string> BUILTINS = {"echo", "type", "pwd", "cd", "complete", "exit"};
 string findInPATH(const string &command);
 string typeCommand(const string &command);
 string execute(string &command);

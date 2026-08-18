@@ -85,7 +85,7 @@ string execute(string &command) {
   }
 
   // converting vector of string to array of char*
-  std::vector<char*> args;
+  std::vector<char *> args;
   // char **args = new char *[tokens.size() + 1];
   for (size_t i = 0; i < tokens.size(); i++) {
     args.push_back(const_cast<char *>(tokens[i].c_str()));
@@ -119,6 +119,7 @@ string evaluateCommand(string command) {
     return pwd();
   } else if (command.substr(0, 2) == "cd" && command[2] == ' ') {
     return cd(command.substr(3));
+  } else if (command == "complete") {
   } else {
     return execute(command);
   }
