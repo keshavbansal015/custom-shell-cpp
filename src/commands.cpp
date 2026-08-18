@@ -151,8 +151,6 @@ string evaluateCommand(const string &command) {
     return pwd();
   } else if (command.substr(0, 2) == "cd" && command[2] == ' ') {
     return cd(command.substr(3));
-  } else if (command == "complete") {
-    return completeCommand("");
   } else if (command.substr(0, 8) == "complete" && command[8] == ' ') {
     return completeCommand(command.substr(9));
   } else {

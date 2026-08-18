@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <unistd.h>
 #include "commands.h"
+#include <cstdio>
 
 vector<string> getMatchingCommands(const string &prefix) {
   set<string> unique_matches;
@@ -93,4 +94,39 @@ vector<string> getMatchingPaths(const string &active_token) {
 
   sort(matches.begin(), matches.end());
   return matches;
+}
+
+
+
+vector<string> runCompleter(const string &completer_path, const string &cmd_name, const string &current_word, const string &previous_word, const string &full_line) {
+  setenv("COMP_LINE", full_line.c_str(), 1);
+  setenv("COMP_POINT", to_string(full_line.length()).c_str(), 1);
+  setenv("COMP_KEY", "9", 1);
+  setenv("COMP_TYPE", "9", 1);
+
+  string exec_cmd = completer_path + " '" + cmd_name + "' '" + current_word + "' '" + previous_word + "'";
+  
+  vector<string> results;
+  FILE* pipe = popen(exec_cmd.c_str(), "r");
+  if (!pipe) return results;
+  
+  char buffer[128];
+  string line = "";
+  while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+    line += buffer;
+    size_t pos;
+    while ((pos = line.find('\n')) != string::npos) {
+      string cand = line.substr(0, pos);
+      if (!cand.empty() && cand.back() == '\r') {
+        cand.pop_back();
+      }
+      results.push_back(cand);
+      line.erase(0, pos + 1);
+    }
+  }
+  if (!line.empty()) {
+    results.push_back(line);
+  }
+  pclose(pipe);
+  return results;
 }
