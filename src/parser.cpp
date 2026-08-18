@@ -69,8 +69,13 @@ TokenInfo parseCompletionTarget(const string &command) {
     }
   }
 
-  info.base_prefix = command.substr(0, last_token_start);
-  info.active_token = command.substr(last_token_start);
+  if (last_was_space) {
+    info.base_prefix = command;
+    info.active_token = "";
+  } else {
+    info.base_prefix = command.substr(0, last_token_start);
+    info.active_token = command.substr(last_token_start);
+  }
 
   bool has_non_space_before = false;
   for (char c : info.base_prefix) {
