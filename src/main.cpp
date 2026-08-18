@@ -202,6 +202,8 @@ std::string typeCommand(std::string command) {
   }
   return command + " is " + output;
 }
+
+
 std::vector<std::string> parseArguments(std::string message) {
   using namespace std;
   vector<string> args;
