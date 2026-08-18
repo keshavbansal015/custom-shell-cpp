@@ -135,7 +135,18 @@ string completeCommand(const string &command) {
     string cmd_name = tokens[2];
     completion_specs[cmd_name] = completer;
     return "";
-  }
+  } else if (tokens[0] == "-r") {
+    if (tokens.size() < 2) {
+      return "complete: usage: complete -r command";
+    }
+    string cmd_name = tokens[1];
+    if (completion_specs.count(cmd_name)) {
+      completion_specs.erase(cmd_name);
+      return "";
+    } else {
+      return "complete: " + cmd_name + ": no completion specification";
+    }
+  } 
 
   return "complete: unsupported option";
 }
