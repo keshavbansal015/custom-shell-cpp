@@ -14,7 +14,7 @@ vector<string> stringSplit(const string &str, char delimiter);
 TokenInfo parseCompletionTarget(const string &command);
 string cleanPathToken(const string &token);
 void splitPath(const string &path, string &dir, string &prefix);
-vector<string> parseArguments(string &message);
-string cleanInput(string &message);
+vector<string> parseArguments(const string &message);
+string cleanInput(const string &message);
 
 #endif

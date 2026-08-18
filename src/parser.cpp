@@ -149,7 +149,7 @@ void splitPath(const string &path, string &dir, string &prefix) {
   }
 }
 
-vector<string> parseArguments(string &message) {
+vector<string> parseArguments(const string &message) {
   using namespace std;
   vector<string> args;
   string current_arg = "";
@@ -205,7 +205,7 @@ vector<string> parseArguments(string &message) {
   return args;
 }
 
-string cleanInput(string &message) {
+string cleanInput(const string &message) {
   using namespace std;
   vector<string> args = parseArguments(message);
   string result = "";
