@@ -146,7 +146,7 @@ string completeCommand(const string &command) {
     } else {
       return "complete: " + cmd_name + ": no completion specification";
     }
-  } 
+  }
 
   return "complete: unsupported option";
 }
@@ -164,6 +164,8 @@ string evaluateCommand(const string &command) {
     return cd(command.substr(3));
   } else if (command.substr(0, 8) == "complete" && command[8] == ' ') {
     return completeCommand(command.substr(9));
+  } else if (command.substr(0, 4) == "jobs") {
+    return "";
   } else {
     return execute(command);
   }

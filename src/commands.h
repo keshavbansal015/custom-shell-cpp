@@ -5,8 +5,8 @@
 #include <vector>
 
 using namespace std;
-inline const vector<string> BUILTINS = {"echo", "type",     "pwd",
-                                        "cd",   "complete", "exit"};
+inline const vector<string> BUILTINS = {"echo",     "type", "pwd", "cd",
+                                        "complete", "jobs", "exit"};
 
 extern unordered_map<string, string> completion_specs;
 string findInPATH(const string &command);
