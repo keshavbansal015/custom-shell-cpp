@@ -101,7 +101,7 @@ vector<string> runCompleter(const string &completer_path,
                             const string &previous_word,
                             const string &full_line) {
   setenv("COMP_LINE", full_line.c_str(), 1);
-  setenv("COMP_POINT", to_string(full_line.length()).c_str(), 1);
+  setenv("COMP_POINT", to_string(current_word.length()).c_str(), 1);
   setenv("COMP_KEY", "9", 1);
   setenv("COMP_TYPE", "9", 1);
 
