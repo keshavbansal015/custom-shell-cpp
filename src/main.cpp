@@ -24,15 +24,17 @@ string readInput() {
 
   while (true) {
     char c;
-    if (read(STDIN_FILENO, &c, 1) <=
-        0) { // reads a character from the standard input, 0 if EOF, -1 on error
+    // reads a character from the standard input, 0 if EOF, -1 on error
+    if (read(STDIN_FILENO, &c, 1) <= 0) {
       break;
     }
 
-    if (c == '\n' || c == '\r') { // newline or carriage return
+    if (c == '\n' || c == '\r') { 
+      // newline or carriage return
       cout << endl;
       break;
-    } else if (c == 127 || c == 8) { // backspace or delete
+    } else if (c == 127 || c == 8) { 
+      // backspace or delete
       last_tab_count = 0;
       if (!command.empty()) { // check command because command could be empty
                               // and it would lead to segmentation fault
@@ -56,7 +58,8 @@ string readInput() {
             previous_word = cmd_tokens[cmd_tokens.size() - 2];
           }
         }
-        cmd_tokens = runCompleter(completion_specs[cmd_name], cmd_name, current_word, previous_word, command);
+        cmd_tokens = runCompleter(completion_specs[cmd_name], cmd_name,
+                                  current_word, previous_word, command);
         ran_programmable = true;
       }
 
@@ -105,8 +108,8 @@ string readInput() {
                   cout << "  ";
                 string display_name = cmd_tokens[i];
                 if (!target.is_command) {
-                  size_t slash_pos =
-                      cmd_tokens[i].find_last_of('/', cmd_tokens[i].length() - 2);
+                  size_t slash_pos = cmd_tokens[i].find_last_of(
+                      '/', cmd_tokens[i].length() - 2);
                   if (slash_pos != string::npos) {
                     display_name = cmd_tokens[i].substr(slash_pos + 1);
                   }

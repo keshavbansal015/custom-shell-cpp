@@ -78,7 +78,7 @@ TokenInfo parseCompletionTarget(const string &command) {
   }
 
   bool has_non_space_before = false;
-  for (char c : info.base_prefix) {
+  for (char c : info.base_prefix) { 
     if (c != ' ') {
       has_non_space_before = true;
       break;
