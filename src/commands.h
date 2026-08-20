@@ -23,6 +23,7 @@ string cd(const string &directory);
 string echo(const string &message);
 string evaluateCommand(const string &command);
 void reapJobs();
+void printAndClearCompletedJobs();
 string completeCommand(const string &command);
 void printOutput(const string &output);
 

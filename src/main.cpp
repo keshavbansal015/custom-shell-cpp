@@ -15,7 +15,7 @@
 
 string readInput() {
   using namespace std;
-  reapJobs();
+  printAndClearCompletedJobs();
   cout << SHELL_PROMPT << flush;
 
   string command = "";

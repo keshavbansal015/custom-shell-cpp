@@ -82,15 +82,24 @@ vector<Job> background_jobs;
 int next_job_number = 1;
 
 void reapJobs() {
+  for (auto &job : background_jobs) {
+    if (job.status == "Running") {
+      int status;
+      pid_t result = waitpid(job.pid, &status, WNOHANG);
+      if (result > 0 || result == -1) {
+        job.status = "Done";
+      }
+    }
+  }
+}
+
+void printAndClearCompletedJobs() {
+  reapJobs();
   for (auto it = background_jobs.begin(); it != background_jobs.end();) {
-    int status;
-    pid_t result = waitpid(it->pid, &status, WNOHANG);
-    if (result > 0) { // child process has terminated
-      cout << "[" << it->job_number << "]+ Done                    " << it->command << endl;
+    if (it->status == "Done") {
+      cout << "[" << it->job_number << "]+  Done                 " << it->command << endl;
       it = background_jobs.erase(it);
-    } else if (result == -1) { // an error occurred
-      it = background_jobs.erase(it);
-    } else { // child process is still running
+    } else {
       it++;
     }
   }
@@ -205,6 +214,7 @@ string evaluateCommand(const string &command) {
   } else if (command.substr(0, 8) == "complete" && command[8] == ' ') {
     return completeCommand(command.substr(9));
   } else if (command.substr(0, 4) == "jobs") {
+    reapJobs();
     string out = "";
     size_t num_jobs = background_jobs.size();
     for (size_t i = 0; i < num_jobs; ++i) {
@@ -215,7 +225,15 @@ string evaluateCommand(const string &command) {
       } else if (i == num_jobs - 2) {
         marker = "-";
       }
-      out += "[" + to_string(job.job_number) + "]" + marker + "  " + job.status + "                 " + job.command + " &\n";
+      string extra = (job.status == "Running") ? " &" : "";
+      out += "[" + to_string(job.job_number) + "]" + marker + "  " + job.status + "                 " + job.command + extra + "\n";
+    }
+    for (auto it = background_jobs.begin(); it != background_jobs.end();) {
+      if (it->status == "Done") {
+        it = background_jobs.erase(it);
+      } else {
+        it++;
+      }
     }
     if (!out.empty() && out.back() == '\n') {
       out.pop_back();
