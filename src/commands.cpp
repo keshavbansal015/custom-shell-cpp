@@ -78,11 +78,51 @@ string typeCommand(const string &command) {
   return command + " is " + output;
 }
 
+struct Job {
+  int job_number;
+  pid_t pid;
+  string command;
+};
+
+vector<Job> background_jobs;
+int next_job_number = 1;
+
+void reapJobs() {
+  for (auto it = background_jobs.begin(); it != background_jobs.end();) {
+    int status;
+    pid_t result = waitpid(it->pid, &status, WNOHANG);
+    if (result > 0) { // child process has terminated
+      cout << "[" << it->job_number << "]+ Done                    " << it->command << endl;
+      it = background_jobs.erase(it);
+    } else if (result == -1) { // an error occurred
+      it = background_jobs.erase(it);
+    } else { // child process is still running
+      it++;
+    }
+  }
+}
+
 string execute(const string &command) {
   string cmd = command;
   vector<string> tokens = parseArguments(cmd);
   if (tokens.empty()) {
     return "";
+  }
+
+  bool run_in_background = false;
+  if (tokens.back() == "&") {
+    run_in_background = true;
+    tokens.pop_back();
+  }
+
+  if (tokens.empty()) {
+    return "";
+  }
+
+  string job_command = "";
+  for (size_t i = 0; i < tokens.size(); ++i) {
+    if (i > 0) job_command += " ";
+    job_command += tokens[i];
   }
 
   // converting vector of string to array of char*
@@ -102,8 +142,14 @@ string execute(const string &command) {
   } else if (pid < 0) {
     return "Error in forking";
   } else {
-    int status;
-    waitpid(pid, &status, 0);
+    if (run_in_background) {
+      int job_num = next_job_number++;
+      background_jobs.push_back({job_num, pid, job_command});
+      cout << "[" << job_num << "] " << pid << endl;
+    } else {
+      int status;
+      waitpid(pid, &status, 0);
+    }
   }
   return "";
 }
@@ -165,7 +211,14 @@ string evaluateCommand(const string &command) {
   } else if (command.substr(0, 8) == "complete" && command[8] == ' ') {
     return completeCommand(command.substr(9));
   } else if (command.substr(0, 4) == "jobs") {
-    return "";
+    string out = "";
+    for (const auto &job : background_jobs) {
+      out += "[" + to_string(job.job_number) + "]  Running                 " + job.command + "\n";
+    }
+    if (!out.empty() && out.back() == '\n') {
+      out.pop_back();
+    }
+    return out;
   } else {
     return execute(command);
   }

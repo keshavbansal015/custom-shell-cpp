@@ -4,11 +4,18 @@
 #include <vector>
 
 using namespace std;
+
+// TokenInfo example: 
+//  Command: echo "Hello" -> base_prefix = "echo ", active_token = "Hello", is_command = true
+//  Command: echo "Hello " -> base_prefix = "echo ", active_token = "Hello ", is_command = false, so path completion
+//  Command: cd /usr/b -> base_prefix = "cd ", active_token = "/usr/b", is_command = false, so path completion
+//  Command: cd /usr/bin/ -> base_prefix = "cd /usr/bin/", active_token = "", is_command = false, so path completion
 struct TokenInfo {
   string base_prefix;
   string active_token;
   bool is_command;
 };
+
 
 vector<string> stringSplit(const string &str, char delimiter);
 TokenInfo parseCompletionTarget(const string &command);

@@ -149,6 +149,9 @@ void splitPath(const string &path, string &dir, string &prefix) {
   }
 }
 
+// This function parses the command line and returns a vector of arguments
+// example: "echo \"Hello World\"" -> ["echo", "Hello World"]
+// example: "cd /usr/bin/" -> ["cd", "/usr/bin/"]
 vector<string> parseArguments(const string &message) {
   using namespace std;
   vector<string> args;
@@ -189,7 +192,7 @@ vector<string> parseArguments(const string &message) {
           current_arg = "";
           has_arg = false;
         }
-      } else if (c == '\\' && i + 1 < message.length()) {
+      } else if (c == '\\' && i + 1 < message.length()) { // example: "hello\n" -> "hello\n"
         current_arg += message[i + 1];
         i++;
         has_arg = true;

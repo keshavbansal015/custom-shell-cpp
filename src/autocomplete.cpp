@@ -100,10 +100,24 @@ vector<string> runCompleter(const string &completer_path,
                             const string &cmd_name, const string &current_word,
                             const string &previous_word,
                             const string &full_line) {
-  setenv("COMP_LINE", full_line.c_str(), 1);
-  setenv("COMP_POINT", to_string(current_word.length()).c_str(), 1);
-  setenv("COMP_KEY", "9", 1);
-  setenv("COMP_TYPE", "9", 1);
+  setenv("COMP_LINE", full_line.c_str(), 1); // comp_line is the full command line
+  setenv("COMP_POINT", to_string(current_word.length()).c_str(), 1); // comp_point is the position of the cursor
+  setenv("COMP_KEY", "9", 1); // comp_key is the key that was pressed to trigger the completion
+  setenv("COMP_TYPE", "9", 1); // comp_type is the type of completion, eg: 1 = normal completion, 2 = menu completion, etc.
+  // comp_words is the number of words in the command
+  vector<string> cmd_tokens = parseArguments(full_line); 
+  setenv("COMP_WORDS", to_string(cmd_tokens.size()).c_str(), 1);
+  // comp_word is the current word being completed
+  setenv("COMP_WORD", current_word.c_str(), 1);
+  // comp_prev_word is the previous word
+  // comp_dir is the directory of the current word
+  string comp_dir = current_word.substr(0, current_word.find_last_of('/'));
+  setenv("COMP_DIR", comp_dir.c_str(), 1);
+  // comp_prefix is the prefix of the current word
+  string comp_prefix = current_word.substr(current_word.find_last_of('/') + 1);
+  setenv("COMP_PREFIX", comp_prefix.c_str(), 1);
+  
+  setenv("COMP_PREV_WORD", previous_word.c_str(), 1);
 
   string exec_cmd = completer_path + " '" + cmd_name + "' '" + current_word +
                     "' '" + previous_word + "'";
@@ -115,21 +129,22 @@ vector<string> runCompleter(const string &completer_path,
 
   char buffer[128];
   string line = "";
-  while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+  while (fgets(buffer, sizeof(buffer), pipe) != nullptr) { // reading the output of the completer
     line += buffer;
     size_t pos;
-    while ((pos = line.find('\n')) != string::npos) {
-      string cand = line.substr(0, pos);
-      if (!cand.empty() && cand.back() == '\r') {
+    // Get all the candidates separated by new lines 
+    while ((pos = line.find('\n')) != string::npos) { // new line character
+      string cand = line.substr(0, pos); // candidate
+      if (!cand.empty() && cand.back() == '\r') { // carriage return character
         cand.pop_back();
       }
-      results.push_back(cand);
-      line.erase(0, pos + 1);
+      results.push_back(cand); // adding the candidate to the results
+      line.erase(0, pos + 1); // removing the new line character
     }
   }
-  if (!line.empty()) {
+  if (!line.empty()) { // adding the last candidate to the results
     results.push_back(line);
   }
-  pclose(pipe);
+  pclose(pipe); // closing the pipe
   return results;
 }
