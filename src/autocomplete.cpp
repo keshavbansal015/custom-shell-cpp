@@ -101,7 +101,7 @@ vector<string> runCompleter(const string &completer_path,
                             const string &previous_word,
                             const string &full_line) {
   setenv("COMP_LINE", full_line.c_str(), 1); // comp_line is the full command line
-  setenv("COMP_POINT", to_string(current_word.length()).c_str(), 1); // comp_point is the position of the cursor
+  setenv("COMP_POINT", to_string(full_line.length()).c_str(), 1); // comp_point is the position of the cursor
   setenv("COMP_KEY", "9", 1); // comp_key is the key that was pressed to trigger the completion
   setenv("COMP_TYPE", "9", 1); // comp_type is the type of completion, eg: 1 = normal completion, 2 = menu completion, etc.
   // comp_words is the number of words in the command
