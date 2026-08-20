@@ -78,12 +78,6 @@ string typeCommand(const string &command) {
   return command + " is " + output;
 }
 
-struct Job {
-  int job_number;
-  pid_t pid;
-  string command;
-};
-
 vector<Job> background_jobs;
 int next_job_number = 1;
 
@@ -144,7 +138,7 @@ string execute(const string &command) {
   } else {
     if (run_in_background) {
       int job_num = next_job_number++;
-      background_jobs.push_back({job_num, pid, job_command});
+      background_jobs.push_back({job_num, pid, job_command, "Running"});
       cout << "[" << job_num << "] " << pid << endl;
     } else {
       int status;
@@ -213,7 +207,7 @@ string evaluateCommand(const string &command) {
   } else if (command.substr(0, 4) == "jobs") {
     string out = "";
     for (const auto &job : background_jobs) {
-      out += "[" + to_string(job.job_number) + "]  Running                 " + job.command + "\n";
+      out += "[" + to_string(job.job_number) + "]+  " + job.status + "                 " + job.command + " &\n";
     }
     if (!out.empty() && out.back() == '\n') {
       out.pop_back();

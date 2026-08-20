@@ -104,15 +104,19 @@ vector<string> runCompleter(const string &completer_path,
   setenv("COMP_POINT", to_string(full_line.length()).c_str(), 1); // comp_point is the position of the cursor
   setenv("COMP_KEY", "9", 1); // comp_key is the key that was pressed to trigger the completion
   setenv("COMP_TYPE", "9", 1); // comp_type is the type of completion, eg: 1 = normal completion, 2 = menu completion, etc.
+  
   // comp_words is the number of words in the command
   vector<string> cmd_tokens = parseArguments(full_line); 
   setenv("COMP_WORDS", to_string(cmd_tokens.size()).c_str(), 1);
+  
   // comp_word is the current word being completed
-  setenv("COMP_WORD", current_word.c_str(), 1);
+  setenv("COMP_WORD", current_word.c_str(), 1); 
+  
   // comp_prev_word is the previous word
   // comp_dir is the directory of the current word
   string comp_dir = current_word.substr(0, current_word.find_last_of('/'));
   setenv("COMP_DIR", comp_dir.c_str(), 1);
+  
   // comp_prefix is the prefix of the current word
   string comp_prefix = current_word.substr(current_word.find_last_of('/') + 1);
   setenv("COMP_PREFIX", comp_prefix.c_str(), 1);

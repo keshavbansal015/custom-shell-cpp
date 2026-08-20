@@ -7,8 +7,14 @@
 using namespace std;
 inline const vector<string> BUILTINS = {"echo",     "type", "pwd", "cd",
                                         "complete", "jobs", "exit"};
-
+struct Job {
+  int job_number;
+  pid_t pid;
+  string command;
+  string status;
+};
 extern unordered_map<string, string> completion_specs;
+extern vector<Job> background_jobs;
 string findInPATH(const string &command);
 string typeCommand(const string &command);
 string execute(const string &command);
