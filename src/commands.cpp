@@ -206,8 +206,16 @@ string evaluateCommand(const string &command) {
     return completeCommand(command.substr(9));
   } else if (command.substr(0, 4) == "jobs") {
     string out = "";
-    for (const auto &job : background_jobs) {
-      out += "[" + to_string(job.job_number) + "]+  " + job.status + "                 " + job.command + " &\n";
+    size_t num_jobs = background_jobs.size();
+    for (size_t i = 0; i < num_jobs; ++i) {
+      const auto &job = background_jobs[i];
+      string marker = " ";
+      if (i == num_jobs - 1) {
+        marker = "+";
+      } else if (i == num_jobs - 2) {
+        marker = "-";
+      }
+      out += "[" + to_string(job.job_number) + "]" + marker + "  " + job.status + "                 " + job.command + " &\n";
     }
     if (!out.empty() && out.back() == '\n') {
       out.pop_back();
