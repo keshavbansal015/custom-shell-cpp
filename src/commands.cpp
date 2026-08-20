@@ -79,7 +79,6 @@ string typeCommand(const string &command) {
 }
 
 vector<Job> background_jobs;
-int next_job_number = 1;
 
 void reapJobs() {
   for (auto &job : background_jobs) {
@@ -146,7 +145,16 @@ string execute(const string &command) {
     return "Error in forking";
   } else {
     if (run_in_background) {
-      int job_num = next_job_number++;
+      int job_num = 1;
+      if (!background_jobs.empty()) {
+        int max_num = 0;
+        for (const auto &job : background_jobs) {
+          if (job.job_number > max_num) {
+            max_num = job.job_number;
+          }
+        }
+        job_num = max_num + 1;
+      }
       background_jobs.push_back({job_num, pid, job_command, "Running"});
       cout << "[" << job_num << "] " << pid << endl;
     } else {
