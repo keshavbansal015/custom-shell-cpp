@@ -17,11 +17,18 @@ struct TokenInfo {
 };
 
 
+struct CommandRedirection {
+  string clean_command;
+  string redirect_file;
+  bool has_redirection;
+};
+
 vector<string> stringSplit(const string &str, char delimiter);
 TokenInfo parseCompletionTarget(const string &command);
 string cleanPathToken(const string &token);
 void splitPath(const string &path, string &dir, string &prefix);
 vector<string> parseArguments(const string &message);
 string cleanInput(const string &message);
+CommandRedirection parseRedirection(const string &command);
 
 #endif

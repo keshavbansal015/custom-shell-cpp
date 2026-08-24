@@ -4,6 +4,7 @@
 #include "terminal.h"
 #include <cctype>
 #include <fcntl.h>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <sys/wait.h>
@@ -152,8 +153,32 @@ void shellLoop() {
   using namespace std;
   while (true) {
     string command = readInput();
-    string output = evaluateCommand(command);
+    CommandRedirection redirect = parseRedirection(command);
+
+    int saved_stdout = -1;
+    int file_fd = -1;
+    if (redirect.has_redirection) {
+      // Create directories if they don't exist
+      filesystem::path p(redirect.redirect_file);
+      if (p.has_parent_path()) {
+        filesystem::create_directories(p.parent_path());
+      }
+      
+      file_fd = open(redirect.redirect_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      if (file_fd >= 0) {
+        saved_stdout = dup(STDOUT_FILENO);
+        dup2(file_fd, STDOUT_FILENO);
+        close(file_fd);
+      }
+    }
+
+    string output = evaluateCommand(redirect.clean_command);
     printOutput(output);
+
+    if (saved_stdout >= 0) {
+      dup2(saved_stdout, STDOUT_FILENO);
+      close(saved_stdout);
+    }
   }
 }
 
