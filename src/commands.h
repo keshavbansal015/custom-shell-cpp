@@ -6,7 +6,7 @@
 
 using namespace std;
 inline const vector<string> BUILTINS = {"echo",     "type", "pwd", "cd",
-                                        "complete", "jobs", "exit"};
+                                        "complete", "jobs", "history", "exit"};
 struct Job {
   int job_number;
   pid_t pid;
