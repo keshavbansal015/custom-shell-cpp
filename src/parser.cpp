@@ -224,8 +224,10 @@ string cleanInput(const string &message) {
 CommandRedirection parseRedirection(const string &command) {
   CommandRedirection result;
   result.clean_command = "";
-  result.redirect_file = "";
-  result.has_redirection = false;
+  result.stdout_file = "";
+  result.stderr_file = "";
+  result.redirect_stdout = false;
+  result.redirect_stderr = false;
 
   bool in_single_quotes = false;
   bool in_double_quotes = false;
@@ -265,111 +267,83 @@ CommandRedirection parseRedirection(const string &command) {
         result.clean_command += c;
         result.clean_command += command[i + 1];
         i += 2;
-      } else if (c == '>') {
-        result.has_redirection = true;
-        i++; // skip '>'
-        
-        while (i < n && command[i] == ' ') {
-          i++;
-        }
-        
-        string file_token = "";
-        bool file_in_single = false;
-        bool file_in_double = false;
-        while (i < n) {
-          char fc = command[i];
-          if (file_in_single) {
-            if (fc == '\'') {
-              file_in_single = false;
-            } else {
-              file_token += fc;
-            }
-            i++;
-          } else if (file_in_double) {
-            if (fc == '"') {
-              file_in_double = false;
-            } else if (fc == '\\' && i + 1 < n) {
-              file_token += command[i + 1];
-              i += 2;
-            } else {
-              file_token += fc;
-            }
-            i++;
-          } else {
-            if (fc == '\'') {
-              file_in_single = true;
-              i++;
-            } else if (fc == '"') {
-              file_in_double = true;
-              i++;
-            } else if (fc == '\\' && i + 1 < n) {
-              file_token += command[i + 1];
-              i += 2;
-            } else if (fc == ' ') {
-              break;
-            } else if (fc == '>') {
-              break;
-            } else {
-              file_token += fc;
-              i++;
-            }
-          }
-        }
-        result.redirect_file = file_token;
-      } else if (c == '1' && i + 1 < n && command[i + 1] == '>') {
-        result.has_redirection = true;
-        i += 2; // skip '1>'
-        
-        while (i < n && command[i] == ' ') {
-          i++;
-        }
-        
-        string file_token = "";
-        bool file_in_single = false;
-        bool file_in_double = false;
-        while (i < n) {
-          char fc = command[i];
-          if (file_in_single) {
-            if (fc == '\'') {
-              file_in_single = false;
-            } else {
-              file_token += fc;
-            }
-            i++;
-          } else if (file_in_double) {
-            if (fc == '"') {
-              file_in_double = false;
-            } else if (fc == '\\' && i + 1 < n) {
-              file_token += command[i + 1];
-              i += 2;
-            } else {
-              file_token += fc;
-            }
-            i++;
-          } else {
-            if (fc == '\'') {
-              file_in_single = true;
-              i++;
-            } else if (fc == '"') {
-              file_in_double = true;
-              i++;
-            } else if (fc == '\\' && i + 1 < n) {
-              file_token += command[i + 1];
-              i += 2;
-            } else if (fc == ' ') {
-              break;
-            } else if (fc == '>') {
-              break;
-            } else {
-              file_token += fc;
-              i++;
-            }
-          }
-        }
-        result.redirect_file = file_token;
       } else {
-        result.clean_command += c;
-        i++;
+        bool is_stdout_redir = false;
+        bool is_stderr_redir = false;
+        size_t redir_op_len = 0;
+
+        if (c == '>') {
+          is_stdout_redir = true;
+          redir_op_len = 1;
+        } else if (c == '1' && i + 1 < n && command[i + 1] == '>') {
+          is_stdout_redir = true;
+          redir_op_len = 2;
+        } else if (c == '2' && i + 1 < n && command[i + 1] == '>') {
+          is_stderr_redir = true;
+          redir_op_len = 2;
+        }
+
+        if (is_stdout_redir || is_stderr_redir) {
+          if (is_stdout_redir) result.redirect_stdout = true;
+          if (is_stderr_redir) result.redirect_stderr = true;
+          
+          i += redir_op_len; // skip the redirection operator
+          
+          while (i < n && command[i] == ' ') {
+            i++;
+          }
+          
+          string file_token = "";
+          bool file_in_single = false;
+          bool file_in_double = false;
+          while (i < n) {
+            char fc = command[i];
+            if (file_in_single) {
+              if (fc == '\'') {
+                file_in_single = false;
+              } else {
+                file_token += fc;
+              }
+              i++;
+            } else if (file_in_double) {
+              if (fc == '"') {
+                file_in_double = false;
+              } else if (fc == '\\' && i + 1 < n) {
+                file_token += command[i + 1];
+                i += 2;
+              } else {
+                file_token += fc;
+              }
+              i++;
+            } else {
+              if (fc == '\'') {
+                file_in_single = true;
+                i++;
+              } else if (fc == '"') {
+                file_in_double = true;
+                i++;
+              } else if (fc == '\\' && i + 1 < n) {
+                file_token += command[i + 1];
+                i += 2;
+              } else if (fc == ' ') {
+                break;
+              } else if (fc == '>') {
+                break;
+              } else {
+                file_token += fc;
+                i++;
+              }
+            }
+          }
+          if (is_stdout_redir) {
+            result.stdout_file = file_token;
+          } else {
+            result.stderr_file = file_token;
+          }
+        } else {
+          result.clean_command += c;
+          i++;
+        }
       }
     }
   }

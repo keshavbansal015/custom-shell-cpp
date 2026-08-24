@@ -19,8 +19,10 @@ struct TokenInfo {
 
 struct CommandRedirection {
   string clean_command;
-  string redirect_file;
-  bool has_redirection;
+  string stdout_file;
+  string stderr_file;
+  bool redirect_stdout;
+  bool redirect_stderr;
 };
 
 vector<string> stringSplit(const string &str, char delimiter);

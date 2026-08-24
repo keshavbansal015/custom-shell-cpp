@@ -156,19 +156,35 @@ void shellLoop() {
     CommandRedirection redirect = parseRedirection(command);
 
     int saved_stdout = -1;
-    int file_fd = -1;
-    if (redirect.has_redirection) {
-      // Create directories if they don't exist
-      filesystem::path p(redirect.redirect_file);
+    int saved_stderr = -1;
+    int out_fd = -1;
+    int err_fd = -1;
+
+    if (redirect.redirect_stdout) {
+      filesystem::path p(redirect.stdout_file);
       if (p.has_parent_path()) {
         filesystem::create_directories(p.parent_path());
       }
       
-      file_fd = open(redirect.redirect_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-      if (file_fd >= 0) {
+      out_fd = open(redirect.stdout_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      if (out_fd >= 0) {
         saved_stdout = dup(STDOUT_FILENO);
-        dup2(file_fd, STDOUT_FILENO);
-        close(file_fd);
+        dup2(out_fd, STDOUT_FILENO);
+        close(out_fd);
+      }
+    }
+
+    if (redirect.redirect_stderr) {
+      filesystem::path p(redirect.stderr_file);
+      if (p.has_parent_path()) {
+        filesystem::create_directories(p.parent_path());
+      }
+      
+      err_fd = open(redirect.stderr_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      if (err_fd >= 0) {
+        saved_stderr = dup(STDERR_FILENO);
+        dup2(err_fd, STDERR_FILENO);
+        close(err_fd);
       }
     }
 
@@ -178,6 +194,10 @@ void shellLoop() {
     if (saved_stdout >= 0) {
       dup2(saved_stdout, STDOUT_FILENO);
       close(saved_stdout);
+    }
+    if (saved_stderr >= 0) {
+      dup2(saved_stderr, STDERR_FILENO);
+      close(saved_stderr);
     }
   }
 }
