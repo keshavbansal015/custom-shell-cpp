@@ -23,6 +23,7 @@ string readInput() {
   enableRawMode();
 
   int last_tab_count = 0;
+  int history_index = command_history.size();
 
   while (true) {
     char c;
@@ -35,6 +36,42 @@ string readInput() {
       // newline or carriage return
       cout << endl;
       break;
+    } else if (c == 27) { // ESC sequence (e.g. arrow keys)
+      char seq[2];
+      if (read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1) {
+        if (seq[0] == '[') {
+          if (seq[1] == 'A') { // Up Arrow
+            last_tab_count = 0;
+            if (!command_history.empty() && history_index > 0) {
+              history_index--;
+              while (!command.empty()) {
+                cout << "\b \b";
+                command.pop_back();
+              }
+              command = command_history[history_index];
+              cout << command << flush;
+            }
+          } else if (seq[1] == 'B') { // Down Arrow
+            last_tab_count = 0;
+            if (history_index + 1 < (int)command_history.size()) {
+              history_index++;
+              while (!command.empty()) {
+                cout << "\b \b";
+                command.pop_back();
+              }
+              command = command_history[history_index];
+              cout << command << flush;
+            } else if (history_index + 1 == (int)command_history.size()) {
+              history_index++;
+              while (!command.empty()) {
+                cout << "\b \b";
+                command.pop_back();
+              }
+              cout << flush;
+            }
+          }
+        }
+      }
     } else if (c == 127 || c == 8) { 
       // backspace or delete
       last_tab_count = 0;
