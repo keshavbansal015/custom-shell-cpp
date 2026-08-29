@@ -93,8 +93,6 @@ string readInput() {
         string previous_word = "";
         // If active token is empty, previous word is the last token in the command
         // Otherwise, previous word is the second to last token in the command
-        // example: command = "cd /usr/bin/", active_token = "", cmd_tokens = ["cd", "/usr/bin/"], previous_word = "/usr/bin/"
-        // example: command = "cd /usr/bin/a", active_token = "a", cmd_tokens = ["cd", "/usr/bin/a"], previous_word = "/usr/bin/a"
         if (target.active_token.empty()) {
           previous_word = cmd_tokens.back();
         } else {
@@ -103,14 +101,6 @@ string readInput() {
           }
         }
         // Run the programmable completer
-        // example: command = "cd /usr/bin/", cmd_name = "cd", current_word = "", previous_word = "/usr/bin/"
-        // result: ["bin", "boot", "dev", ...]
-        // command = "ls /usr/bin/", cmd_name = "ls", current_word = "", previous_word = "/usr/bin/"
-        // result: ["/", "/bin", "/boot", ...]
-        // command = "git checkout " , cmd_name = "git", current_word = "", previous_word = "git checkout "
-        // result: ["branch", "tag", ...]
-        // command = "git ", cmd_name = "git", current_word = "", previous_word = "git "
-        // result: ["branch", "tag", ...]
         cmd_tokens = runCompleter(completion_specs[cmd_name], cmd_name,
                                   current_word, previous_word, command);
         ran_programmable = true;

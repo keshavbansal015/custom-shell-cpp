@@ -1,6 +1,7 @@
 #include "commands.h"
 #include "parser.h"
 #include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -251,8 +252,25 @@ string evaluateCommand(const string &command) {
     }
     return out;
   } else if (command == "history" || (command.length() >= 8 && command.substr(0, 7) == "history" && command[7] == ' ')) {
-    size_t n = command_history.size();
     vector<string> args = parseArguments(command);
+    if (args.size() > 1 && args[1] == "-r") {
+      if (args.size() > 2) {
+        ifstream file(args[2]);
+        if (file.is_open()) {
+          string line;
+          while (getline(file, line)) {
+            if (!line.empty() && line.back() == '\r') {
+              line.pop_back();
+            }
+            if (!line.empty()) {
+              command_history.push_back(line);
+            }
+          }
+        }
+      }
+      return "";
+    }
+    size_t n = command_history.size();
     if (args.size() > 1) {
       try {
         int count = stoi(args[1]);
