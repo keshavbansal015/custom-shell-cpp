@@ -193,6 +193,12 @@ void shellLoop() {
     }
     command_history.push_back(command);
 
+    vector<string> stages = splitPipeline(command);
+    if (stages.size() > 1) {
+      executePipeline(stages);
+      continue;
+    }
+
     CommandRedirection redirect = parseRedirection(command);
 
     int saved_stdout = -1;

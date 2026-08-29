@@ -448,3 +448,59 @@ CommandRedirection parseRedirection(const string &command) {
 
   return result;
 }
+
+vector<string> splitPipeline(const string &command) {
+  vector<string> stages;
+  string current_stage = "";
+  bool in_single_quotes = false;
+  bool in_double_quotes = false;
+
+  for (size_t i = 0; i < command.length(); ++i) {
+    char c = command[i];
+    if (in_single_quotes) {
+      if (c == '\'') {
+        in_single_quotes = false;
+      }
+      current_stage += c;
+    } else if (in_double_quotes) {
+      if (c == '"') {
+        in_double_quotes = false;
+      } else if (c == '\\' && i + 1 < command.length()) {
+        current_stage += c;
+        current_stage += command[i + 1];
+        i++;
+        continue;
+      }
+      current_stage += c;
+    } else {
+      if (c == '\'') {
+        in_single_quotes = true;
+        current_stage += c;
+      } else if (c == '"') {
+        in_double_quotes = true;
+        current_stage += c;
+      } else if (c == '\\' && i + 1 < command.length()) {
+        current_stage += c;
+        current_stage += command[i + 1];
+        i++;
+      } else if (c == '|') {
+        size_t start = 0;
+        while (start < current_stage.length() && current_stage[start] == ' ') start++;
+        size_t end = current_stage.length();
+        while (end > start && current_stage[end - 1] == ' ') end--;
+        stages.push_back(current_stage.substr(start, end - start));
+        current_stage = "";
+      } else {
+        current_stage += c;
+      }
+    }
+  }
+
+  size_t start = 0;
+  while (start < current_stage.length() && current_stage[start] == ' ') start++;
+  size_t end = current_stage.length();
+  while (end > start && current_stage[end - 1] == ' ') end--;
+  stages.push_back(current_stage.substr(start, end - start));
+
+  return stages;
+}

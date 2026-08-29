@@ -31,5 +31,6 @@ string completeCommand(const string &command);
 void printOutput(const string &output);
 void loadHistoryFromFile();
 void saveHistoryToFile();
+void executePipeline(const vector<string> &stages);
 
 #endif

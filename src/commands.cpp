@@ -1,5 +1,6 @@
 #include "commands.h"
 #include "parser.h"
+#include <fcntl.h>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -437,5 +438,110 @@ string declareCommand(const string &message) {
       }
     }
     return out;
+  }
+}
+
+void executePipeline(const vector<string> &stages) {
+  int num_stages = stages.size();
+  int prev_fd = -1;
+  vector<pid_t> pids;
+
+  for (int i = 0; i < num_stages; ++i) {
+    int pipefd[2];
+    if (i < num_stages - 1) {
+      if (pipe(pipefd) < 0) {
+        perror("pipe");
+        return;
+      }
+    }
+
+    pid_t pid = fork();
+    if (pid < 0) {
+      perror("fork");
+      return;
+    }
+
+    if (pid == 0) { // Child process
+      if (i > 0) {
+        dup2(prev_fd, STDIN_FILENO);
+        close(prev_fd);
+      }
+      if (i < num_stages - 1) {
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
+        close(pipefd[0]);
+      }
+
+      CommandRedirection redirect = parseRedirection(stages[i]);
+      if (redirect.redirect_stdout) {
+        filesystem::path p(redirect.stdout_file);
+        if (p.has_parent_path()) {
+          filesystem::create_directories(p.parent_path());
+        }
+        int flags = O_WRONLY | O_CREAT | (redirect.append_stdout ? O_APPEND : O_TRUNC);
+        int out_fd = open(redirect.stdout_file.c_str(), flags, 0644);
+        if (out_fd >= 0) {
+          dup2(out_fd, STDOUT_FILENO);
+          close(out_fd);
+        }
+      }
+      if (redirect.redirect_stderr) {
+        filesystem::path p(redirect.stderr_file);
+        if (p.has_parent_path()) {
+          filesystem::create_directories(p.parent_path());
+        }
+        int flags = O_WRONLY | O_CREAT | (redirect.append_stderr ? O_APPEND : O_TRUNC);
+        int err_fd = open(redirect.stderr_file.c_str(), flags, 0644);
+        if (err_fd >= 0) {
+          dup2(err_fd, STDERR_FILENO);
+          close(err_fd);
+        }
+      }
+
+      vector<string> tokens = parseArguments(redirect.clean_command);
+      if (tokens.empty()) {
+        exit(0);
+      }
+
+      string cmd_name = tokens[0];
+      bool is_builtin = false;
+      for (const string &b : BUILTINS) {
+        if (cmd_name == b) {
+          is_builtin = true;
+          break;
+        }
+      }
+
+      if (is_builtin) {
+        string out = evaluateCommand(redirect.clean_command);
+        if (!out.empty()) {
+          cout << out << endl;
+        }
+        exit(0);
+      } else {
+        vector<char *> args;
+        for (size_t t = 0; t < tokens.size(); ++t) {
+          args.push_back(const_cast<char *>(tokens[t].c_str()));
+        }
+        args.push_back(nullptr);
+        execvp(args[0], args.data());
+        cerr << args[0] << ": command not found" << endl;
+        exit(127);
+      }
+    } else { // Parent process
+      pids.push_back(pid);
+      if (i > 0) {
+        close(prev_fd);
+      }
+      if (i < num_stages - 1) {
+        close(pipefd[1]);
+        prev_fd = pipefd[0];
+      }
+    }
+  }
+
+  for (pid_t pid : pids) {
+    int status;
+    waitpid(pid, &status, 0);
   }
 }

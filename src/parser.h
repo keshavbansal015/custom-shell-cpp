@@ -35,5 +35,6 @@ string getVariableValue(const string &var_name);
 vector<string> parseArguments(const string &message);
 string cleanInput(const string &message);
 CommandRedirection parseRedirection(const string &command);
+vector<string> splitPipeline(const string &command);
 
 #endif
