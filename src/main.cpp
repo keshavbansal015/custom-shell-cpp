@@ -153,6 +153,18 @@ void shellLoop() {
   using namespace std;
   while (true) {
     string command = readInput();
+    bool is_empty = true;
+    for (char c : command) {
+      if (!isspace(c)) {
+        is_empty = false;
+        break;
+      }
+    }
+    if (is_empty) {
+      continue;
+    }
+    command_history.push_back(command);
+
     CommandRedirection redirect = parseRedirection(command);
 
     int saved_stdout = -1;

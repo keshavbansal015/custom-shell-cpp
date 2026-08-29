@@ -1,7 +1,9 @@
 #include "commands.h"
 #include "parser.h"
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -79,6 +81,7 @@ string typeCommand(const string &command) {
 }
 
 vector<Job> background_jobs;
+vector<string> command_history;
 
 void reapJobs() {
   for (auto &job : background_jobs) {
@@ -243,6 +246,16 @@ string evaluateCommand(const string &command) {
         it++;
       }
     }
+    if (!out.empty() && out.back() == '\n') {
+      out.pop_back();
+    }
+    return out;
+  } else if (command == "history" || (command.length() >= 8 && command.substr(0, 7) == "history" && command[7] == ' ')) {
+    stringstream ss;
+    for (size_t i = 0; i < command_history.size(); ++i) {
+      ss << setw(5) << (i + 1) << "  " << command_history[i] << "\n";
+    }
+    string out = ss.str();
     if (!out.empty() && out.back() == '\n') {
       out.pop_back();
     }

@@ -15,6 +15,7 @@ struct Job {
 };
 extern unordered_map<string, string> completion_specs;
 extern vector<Job> background_jobs;
+extern vector<string> command_history;
 string findInPATH(const string &command);
 string typeCommand(const string &command);
 string execute(const string &command);
