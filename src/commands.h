@@ -5,7 +5,7 @@
 #include <vector>
 
 using namespace std;
-inline const vector<string> BUILTINS = {"echo",     "type", "pwd", "cd",
+inline const vector<string> BUILTINS = {"echo",     "type", "pwd", "cd", "declare",
                                         "complete", "jobs", "history", "exit"};
 struct Job {
   int job_number;
@@ -16,12 +16,14 @@ struct Job {
 extern unordered_map<string, string> completion_specs;
 extern vector<Job> background_jobs;
 extern vector<string> command_history;
+extern unordered_map<string, string> shell_variables;
 string findInPATH(const string &command);
 string typeCommand(const string &command);
 string execute(const string &command);
 string pwd();
 string cd(const string &directory);
 string echo(const string &message);
+string declareCommand(const string &message);
 string evaluateCommand(const string &command);
 void reapJobs();
 void printAndClearCompletedJobs();

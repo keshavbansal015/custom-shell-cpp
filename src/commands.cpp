@@ -84,6 +84,7 @@ string typeCommand(const string &command) {
 vector<Job> background_jobs;
 vector<string> command_history;
 size_t history_appended_offset = 0;
+unordered_map<string, string> shell_variables;
 
 void reapJobs() {
   for (auto &job : background_jobs) {
@@ -322,6 +323,8 @@ string evaluateCommand(const string &command) {
       out.pop_back();
     }
     return out;
+  } else if (command == "declare" || (command.length() >= 8 && command.substr(0, 7) == "declare" && command[7] == ' ')) {
+    return declareCommand(command.length() >= 8 ? command.substr(8) : "");
   } else {
     return execute(command);
   }
@@ -365,5 +368,68 @@ void saveHistoryToFile() {
         file << cmd << "\n";
       }
     }
+  }
+}
+
+bool isValidIdentifier(const string &name) {
+  if (name.empty()) return false;
+  if (!isalpha(name[0]) && name[0] != '_') return false;
+  for (size_t i = 1; i < name.length(); ++i) {
+    if (!isalnum(name[i]) && name[i] != '_') return false;
+  }
+  return true;
+}
+
+string declareCommand(const string &message) {
+  vector<string> tokens = parseArguments(message);
+  if (tokens.empty()) {
+    return "";
+  }
+
+  if (tokens[0] == "-p") {
+    if (tokens.size() == 1) {
+      string out = "";
+      for (const auto &pair : shell_variables) {
+        if (!out.empty()) out += "\n";
+        out += "declare -- " + pair.first + "=\"" + pair.second + "\"";
+      }
+      return out;
+    }
+    string out = "";
+    for (size_t i = 1; i < tokens.size(); ++i) {
+      const string &var_name = tokens[i];
+      if (shell_variables.count(var_name)) {
+        if (!out.empty()) out += "\n";
+        out += "declare -- " + var_name + "=\"" + shell_variables[var_name] + "\"";
+      } else {
+        if (!out.empty()) out += "\n";
+        out += "declare: " + var_name + ": not found";
+      }
+    }
+    return out;
+  } else if (tokens[0] == "-F") {
+    return "";
+  } else {
+    string out = "";
+    for (size_t i = 0; i < tokens.size(); ++i) {
+      const string &tok = tokens[i];
+      size_t eq_pos = tok.find('=');
+      string var_name = (eq_pos != string::npos) ? tok.substr(0, eq_pos) : tok;
+      string var_val = (eq_pos != string::npos) ? tok.substr(eq_pos + 1) : "";
+
+      if (!isValidIdentifier(var_name)) {
+        if (!out.empty()) out += "\n";
+        out += "declare: `" + tok + "': not a valid identifier";
+      } else {
+        if (eq_pos != string::npos) {
+          shell_variables[var_name] = var_val;
+        } else {
+          if (!shell_variables.count(var_name)) {
+            shell_variables[var_name] = "";
+          }
+        }
+      }
+    }
+    return out;
   }
 }
