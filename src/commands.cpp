@@ -251,8 +251,21 @@ string evaluateCommand(const string &command) {
     }
     return out;
   } else if (command == "history" || (command.length() >= 8 && command.substr(0, 7) == "history" && command[7] == ' ')) {
+    size_t n = command_history.size();
+    vector<string> args = parseArguments(command);
+    if (args.size() > 1) {
+      try {
+        int count = stoi(args[1]);
+        if (count >= 0) {
+          n = static_cast<size_t>(count);
+        }
+      } catch (...) {
+        // Fall back to full history if parsing fails
+      }
+    }
+    size_t start_idx = (command_history.size() > n) ? (command_history.size() - n) : 0;
     stringstream ss;
-    for (size_t i = 0; i < command_history.size(); ++i) {
+    for (size_t i = start_idx; i < command_history.size(); ++i) {
       ss << setw(5) << (i + 1) << "  " << command_history[i] << "\n";
     }
     string out = ss.str();
