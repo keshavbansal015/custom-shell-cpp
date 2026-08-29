@@ -1,3 +1,4 @@
+#include "commands.h"
 #include "parser.h"
 #include <sstream>
 
@@ -149,6 +150,17 @@ void splitPath(const string &path, string &dir, string &prefix) {
   }
 }
 
+string getVariableValue(const string &var_name) {
+  if (shell_variables.count(var_name)) {
+    return shell_variables[var_name];
+  }
+  char *env = getenv(var_name.c_str());
+  if (env) {
+    return string(env);
+  }
+  return "";
+}
+
 // This function parses the command line and returns a vector of arguments
 // example: "echo \"Hello World\"" -> ["echo", "Hello World"]
 // example: "cd /usr/bin/" -> ["cd", "/usr/bin/"]
@@ -176,6 +188,30 @@ vector<string> parseArguments(const string &message) {
                   message[i + 1] == '$' || message[i + 1] == '\n')) {
         current_arg += message[i + 1];
         i++;
+      } else if (c == '$') {
+        if (i + 1 < message.length() && message[i + 1] == '{') {
+          size_t close_brace = message.find('}', i + 2);
+          if (close_brace != string::npos) {
+            string var_name = message.substr(i + 2, close_brace - (i + 2));
+            current_arg += getVariableValue(var_name);
+            i = close_brace;
+          } else {
+            current_arg += c;
+          }
+        } else {
+          size_t start = i + 1;
+          size_t end = start;
+          while (end < message.length() && (isalnum(message[end]) || message[end] == '_')) {
+            end++;
+          }
+          if (end > start) {
+            string var_name = message.substr(start, end - start);
+            current_arg += getVariableValue(var_name);
+            i = end - 1;
+          } else {
+            current_arg += c;
+          }
+        }
       } else {
         current_arg += c;
       }
@@ -196,6 +232,40 @@ vector<string> parseArguments(const string &message) {
         current_arg += message[i + 1];
         i++;
         has_arg = true;
+      } else if (c == '$') {
+        if (i + 1 < message.length() && message[i + 1] == '{') {
+          size_t close_brace = message.find('}', i + 2);
+          if (close_brace != string::npos) {
+            string var_name = message.substr(i + 2, close_brace - (i + 2));
+            string val = getVariableValue(var_name);
+            if (!val.empty()) {
+              current_arg += val;
+              has_arg = true;
+            }
+            i = close_brace;
+          } else {
+            current_arg += c;
+            has_arg = true;
+          }
+        } else {
+          size_t start = i + 1;
+          size_t end = start;
+          while (end < message.length() && (isalnum(message[end]) || message[end] == '_')) {
+            end++;
+          }
+          if (end > start) {
+            string var_name = message.substr(start, end - start);
+            string val = getVariableValue(var_name);
+            if (!val.empty()) {
+              current_arg += val;
+              has_arg = true;
+            }
+            i = end - 1;
+          } else {
+            current_arg += c;
+            has_arg = true;
+          }
+        }
       } else {
         current_arg += c;
         has_arg = true;

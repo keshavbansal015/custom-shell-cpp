@@ -15,15 +15,16 @@ string pwd() {
 }
 
 string cd(const string &directory) {
-  if (directory == "") {
+  vector<string> tokens = parseArguments(directory);
+  if (tokens.empty()) {
     return "";
   }
 
-  string targetDir = directory;
-  if (directory == "~") {
+  string targetDir = tokens[0];
+  if (targetDir == "~") {
     char *home = getenv("HOME");
     targetDir = home ? home : "";
-  } else if (directory == "-") {
+  } else if (targetDir == "-") {
     char *oldpwd = getenv("OLDPWD");
     if (!oldpwd) {
       return "cd: OLDPWD not set";
@@ -40,7 +41,7 @@ string cd(const string &directory) {
     return "";
   }
 
-  return "cd: " + directory + ": No such file or directory";
+  return "cd: " + targetDir + ": No such file or directory";
 }
 
 string findInPATH(const string &command) {
@@ -67,18 +68,23 @@ string findInPATH(const string &command) {
 }
 
 string typeCommand(const string &command) {
+  vector<string> tokens = parseArguments(command);
+  if (tokens.empty()) {
+    return "";
+  }
+  string cmd = tokens[0];
   // check if the command is a shell builtin
   for (string shellCommand : BUILTINS) {
-    if (command.substr(0, shellCommand.length()) == shellCommand) {
+    if (cmd == shellCommand) {
       return shellCommand + " is a shell builtin";
     }
   }
 
-  string output = findInPATH(command);
+  string output = findInPATH(cmd);
   if (output == "") {
-    return command + ": not found";
+    return cmd + ": not found";
   }
-  return command + " is " + output;
+  return cmd + " is " + output;
 }
 
 vector<Job> background_jobs;
