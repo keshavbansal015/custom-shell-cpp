@@ -298,6 +298,8 @@ CommandRedirection parseRedirection(const string &command) {
   result.stderr_file = "";
   result.redirect_stdout = false;
   result.redirect_stderr = false;
+  result.append_stdout = false;
+  result.append_stderr = false;
 
   bool in_single_quotes = false;
   bool in_double_quotes = false;
@@ -340,22 +342,44 @@ CommandRedirection parseRedirection(const string &command) {
       } else {
         bool is_stdout_redir = false;
         bool is_stderr_redir = false;
+        bool is_append = false;
         size_t redir_op_len = 0;
 
-        if (c == '>') {
+        if (c == '1' && i + 2 < n && command[i + 1] == '>' && command[i + 2] == '>') {
           is_stdout_redir = true;
-          redir_op_len = 1;
+          is_append = true;
+          redir_op_len = 3;
+        } else if (c == '2' && i + 2 < n && command[i + 1] == '>' && command[i + 2] == '>') {
+          is_stderr_redir = true;
+          is_append = true;
+          redir_op_len = 3;
+        } else if (c == '>' && i + 1 < n && command[i + 1] == '>') {
+          is_stdout_redir = true;
+          is_append = true;
+          redir_op_len = 2;
         } else if (c == '1' && i + 1 < n && command[i + 1] == '>') {
           is_stdout_redir = true;
+          is_append = false;
           redir_op_len = 2;
         } else if (c == '2' && i + 1 < n && command[i + 1] == '>') {
           is_stderr_redir = true;
+          is_append = false;
           redir_op_len = 2;
+        } else if (c == '>') {
+          is_stdout_redir = true;
+          is_append = false;
+          redir_op_len = 1;
         }
 
         if (is_stdout_redir || is_stderr_redir) {
-          if (is_stdout_redir) result.redirect_stdout = true;
-          if (is_stderr_redir) result.redirect_stderr = true;
+          if (is_stdout_redir) {
+            result.redirect_stdout = true;
+            result.append_stdout = is_append;
+          }
+          if (is_stderr_redir) {
+            result.redirect_stderr = true;
+            result.append_stderr = is_append;
+          }
           
           i += redir_op_len; // skip the redirection operator
           

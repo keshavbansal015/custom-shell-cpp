@@ -206,7 +206,8 @@ void shellLoop() {
         filesystem::create_directories(p.parent_path());
       }
       
-      out_fd = open(redirect.stdout_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      int flags = O_WRONLY | O_CREAT | (redirect.append_stdout ? O_APPEND : O_TRUNC);
+      out_fd = open(redirect.stdout_file.c_str(), flags, 0644);
       if (out_fd >= 0) {
         saved_stdout = dup(STDOUT_FILENO);
         dup2(out_fd, STDOUT_FILENO);
@@ -220,7 +221,8 @@ void shellLoop() {
         filesystem::create_directories(p.parent_path());
       }
       
-      err_fd = open(redirect.stderr_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      int flags = O_WRONLY | O_CREAT | (redirect.append_stderr ? O_APPEND : O_TRUNC);
+      err_fd = open(redirect.stderr_file.c_str(), flags, 0644);
       if (err_fd >= 0) {
         saved_stderr = dup(STDERR_FILENO);
         dup2(err_fd, STDERR_FILENO);

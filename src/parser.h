@@ -23,12 +23,15 @@ struct CommandRedirection {
   string stderr_file;
   bool redirect_stdout;
   bool redirect_stderr;
+  bool append_stdout;
+  bool append_stderr;
 };
 
 vector<string> stringSplit(const string &str, char delimiter);
 TokenInfo parseCompletionTarget(const string &command);
 string cleanPathToken(const string &token);
 void splitPath(const string &path, string &dir, string &prefix);
+string getVariableValue(const string &var_name);
 vector<string> parseArguments(const string &message);
 string cleanInput(const string &message);
 CommandRedirection parseRedirection(const string &command);
