@@ -83,6 +83,7 @@ string typeCommand(const string &command) {
 
 vector<Job> background_jobs;
 vector<string> command_history;
+size_t history_appended_offset = 0;
 
 void reapJobs() {
   for (auto &job : background_jobs) {
@@ -266,6 +267,36 @@ string evaluateCommand(const string &command) {
               command_history.push_back(line);
             }
           }
+          history_appended_offset = command_history.size();
+        }
+      }
+      return "";
+    } else if (args.size() > 1 && args[1] == "-w") {
+      if (args.size() > 2) {
+        filesystem::path p(args[2]);
+        if (p.has_parent_path()) {
+          filesystem::create_directories(p.parent_path());
+        }
+        ofstream file(args[2]);
+        if (file.is_open()) {
+          for (const auto &cmd : command_history) {
+            file << cmd << "\n";
+          }
+        }
+      }
+      return "";
+    } else if (args.size() > 1 && args[1] == "-a") {
+      if (args.size() > 2) {
+        filesystem::path p(args[2]);
+        if (p.has_parent_path()) {
+          filesystem::create_directories(p.parent_path());
+        }
+        ofstream file(args[2], ios::app);
+        if (file.is_open()) {
+          for (size_t i = history_appended_offset; i < command_history.size(); ++i) {
+            file << command_history[i] << "\n";
+          }
+          history_appended_offset = command_history.size();
         }
       }
       return "";
@@ -299,5 +330,40 @@ string evaluateCommand(const string &command) {
 void printOutput(const string &output) {
   if (!output.empty()) {
     cout << output << endl;
+  }
+}
+
+void loadHistoryFromFile() {
+  const char *histfile = getenv("HISTFILE");
+  if (histfile && string(histfile).length() > 0) {
+    ifstream file(histfile);
+    if (file.is_open()) {
+      string line;
+      while (getline(file, line)) {
+        if (!line.empty() && line.back() == '\r') {
+          line.pop_back();
+        }
+        if (!line.empty()) {
+          command_history.push_back(line);
+        }
+      }
+      history_appended_offset = command_history.size();
+    }
+  }
+}
+
+void saveHistoryToFile() {
+  const char *histfile = getenv("HISTFILE");
+  if (histfile && string(histfile).length() > 0) {
+    filesystem::path p(histfile);
+    if (p.has_parent_path()) {
+      filesystem::create_directories(p.parent_path());
+    }
+    ofstream file(histfile);
+    if (file.is_open()) {
+      for (const auto &cmd : command_history) {
+        file << cmd << "\n";
+      }
+    }
   }
 }

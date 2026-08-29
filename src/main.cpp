@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "terminal.h"
 #include <cctype>
+#include <cstdlib>
 #include <fcntl.h>
 #include <filesystem>
 #include <iostream>
@@ -245,6 +246,9 @@ int main() {
   // Flush after every cout / std:cerr
   cout << unitbuf;
   cerr << unitbuf;
+
+  loadHistoryFromFile();
+  atexit(saveHistoryToFile);
 
   shellLoop();
 }

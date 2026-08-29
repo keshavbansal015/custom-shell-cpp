@@ -27,5 +27,7 @@ void reapJobs();
 void printAndClearCompletedJobs();
 string completeCommand(const string &command);
 void printOutput(const string &output);
+void loadHistoryFromFile();
+void saveHistoryToFile();
 
 #endif
