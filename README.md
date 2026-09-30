@@ -84,7 +84,7 @@ flowchart TD
     B -->|Autocompletion Tab| C[Autocomplete Engine<br/>LCP / Path / $PATH Search]
     B -->|Return Key| D[Command Parser]
     
-    D --> E{Pipeline Check<br/>contains '|' ?}
+    D --> E{"Pipeline Check<br/>contains '|' ?"}
     E -->|Yes| F[Pipeline Executor<br/>fork / pipe / dup2]
     E -->|No| G[Redirection Parser<br/>stdout / stderr / append]
     
