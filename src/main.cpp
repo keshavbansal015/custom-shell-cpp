@@ -33,13 +33,14 @@ string readInput() {
       break;
     }
 
-    if (c == '\n' || c == '\r') { 
+    if (c == '\n' || c == '\r') {
       // newline or carriage return
       cout << endl;
       break;
     } else if (c == 27) { // ESC sequence (e.g. arrow keys)
       char seq[2];
-      if (read(STDIN_FILENO, &seq[0], 1) == 1 && read(STDIN_FILENO, &seq[1], 1) == 1) {
+      if (read(STDIN_FILENO, &seq[0], 1) == 1 &&
+          read(STDIN_FILENO, &seq[1], 1) == 1) {
         if (seq[0] == '[') {
           if (seq[1] == 'A') { // Up Arrow
             last_tab_count = 0;
@@ -73,7 +74,7 @@ string readInput() {
           }
         }
       }
-    } else if (c == 127 || c == 8) { 
+    } else if (c == 127 || c == 8) {
       // backspace or delete
       last_tab_count = 0;
       if (!command.empty()) { // check command because command could be empty
@@ -84,7 +85,7 @@ string readInput() {
       }
     } else if (c == '\t') { // tab
       last_tab_count++;
-      TokenInfo target = parseCompletionTarget(command); 
+      TokenInfo target = parseCompletionTarget(command);
       vector<string> cmd_tokens = parseArguments(command);
       bool ran_programmable = false; // If a programmable completer was run
       // Check if there is a programmable completer for the command
@@ -92,8 +93,9 @@ string readInput() {
         string cmd_name = cmd_tokens[0];
         string current_word = target.active_token;
         string previous_word = "";
-        // If active token is empty, previous word is the last token in the command
-        // Otherwise, previous word is the second to last token in the command
+        // If active token is empty, previous word is the last token in the
+        // command Otherwise, previous word is the second to last token in the
+        // command
         if (target.active_token.empty()) {
           previous_word = cmd_tokens.back();
         } else {
@@ -211,8 +213,9 @@ void shellLoop() {
       if (p.has_parent_path()) {
         filesystem::create_directories(p.parent_path());
       }
-      
-      int flags = O_WRONLY | O_CREAT | (redirect.append_stdout ? O_APPEND : O_TRUNC);
+
+      int flags =
+          O_WRONLY | O_CREAT | (redirect.append_stdout ? O_APPEND : O_TRUNC);
       out_fd = open(redirect.stdout_file.c_str(), flags, 0644);
       if (out_fd >= 0) {
         saved_stdout = dup(STDOUT_FILENO);
@@ -226,8 +229,9 @@ void shellLoop() {
       if (p.has_parent_path()) {
         filesystem::create_directories(p.parent_path());
       }
-      
-      int flags = O_WRONLY | O_CREAT | (redirect.append_stderr ? O_APPEND : O_TRUNC);
+
+      int flags =
+          O_WRONLY | O_CREAT | (redirect.append_stderr ? O_APPEND : O_TRUNC);
       err_fd = open(redirect.stderr_file.c_str(), flags, 0644);
       if (err_fd >= 0) {
         saved_stderr = dup(STDERR_FILENO);
@@ -250,11 +254,27 @@ void shellLoop() {
   }
 }
 
+void printArt() {
+  std::cout << R"(
+ /$$     /$$        /$$                 /$$                 /$$                 /$$
+|  $$   /$$/       | $$                | $$                | $$                | $$
+ \  $$ /$$//$$$$$$ | $$$$$$$   /$$$$$$ | $$$$$$$   /$$$$$$ | $$$$$$$   /$$$$$$ | $$
+  \  $$$$//$$__  $$| $$__  $$ /$$__  $$| $$__  $$ /$$__  $$| $$__  $$ /$$__  $$| $$
+   \  $$/| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$|__/
+    | $$ | $$  | $$| $$  | $$| $$  | $$| $$  | $$| $$  | $$| $$  | $$| $$  | $$    
+    | $$ |  $$$$$$/| $$  | $$|  $$$$$$/| $$  | $$|  $$$$$$/| $$  | $$|  $$$$$$/ /$$
+    |__/  \______/ |__/  |__/ \______/ |__/  |__/ \______/ |__/  |__/ \______/ |__/
+
+    Welcome to my shell!
+)" << std::endl;
+}
+
 int main() {
   // Flush after every cout / std:cerr
   cout << unitbuf;
   cerr << unitbuf;
 
+  printArt();
   loadHistoryFromFile();
   atexit(saveHistoryToFile);
 

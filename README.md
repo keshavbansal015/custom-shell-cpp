@@ -12,13 +12,15 @@ A lightweight, robust, Unix-compliant interactive shell written from scratch in 
 ## 📸 Preview & Demo
 
 ```text
-  ____            _       ____  _          _ _ 
- |  _ \ _   _ ___| |_    / ___|| |__   ___| | |
- | |_) | | | / __| __|   \___ \| '_ \ / _ \ | |
- |  _ <| |_| \__ \ |_     ___) | | | |  __/ | |
- |_| \_\\__,_|___/\__|___|____/|_| |_|\___|_|_|
-                     |_____|                   
-================================================
+ /$$     /$$        /$$                 /$$                 /$$                 /$$
+|  $$   /$$/       | $$                | $$                | $$                | $$
+ \  $$ /$$//$$$$$$ | $$$$$$$   /$$$$$$ | $$$$$$$   /$$$$$$ | $$$$$$$   /$$$$$$ | $$
+  \  $$$$//$$__  $$| $$__  $$ /$$__  $$| $$__  $$ /$$__  $$| $$__  $$ /$$__  $$| $$
+   \  $$/| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$|__/
+    | $$ | $$  | $$| $$  | $$| $$  | $$| $$  | $$| $$  | $$| $$  | $$| $$  | $$    
+    | $$ |  $$$$$$/| $$  | $$|  $$$$$$/| $$  | $$|  $$$$$$/| $$  | $$|  $$$$$$/ /$$
+    |__/  \______/ |__/  |__/ \______/ |__/  |__/ \______/ |__/  |__/ \______/ |__/
+====================================================================================
 $ echo "Welcome to Custom C++ Shell"
 Welcome to Custom C++ Shell
 
@@ -35,9 +37,9 @@ $ history
 
 ---
 
-## ✨ Features
+## Features
 
-- 🛠️ **Custom Builtin Commands**:
+- **Custom Builtin Commands**:
   - `cd` — Directory navigation supporting `~`, `-`, and relative/absolute paths.
   - `pwd` — Print current working directory.
   - `echo` — Formatted printing with quote stripping, escape sequences, and environment variable expansion.
@@ -48,33 +50,33 @@ $ history
   - `jobs` — Background job tracking, status monitoring, and auto-reaping.
   - `exit` — Clean process termination and state saving.
 
-- 🔀 **Pipelining & Multi-Stage IPC**:
+- **Pipelining & Multi-Stage IPC**:
   - Supports arbitrary multi-stage pipelines (`cmd1 | cmd2 | cmd3 | ...`).
   - Implemented using low-level POSIX `pipe()`, `fork()`, and `dup2()` system calls.
 
-- 📤 **I/O Redirection**:
+- **I/O Redirection**:
   - Standard output redirection (`>` and `1>`) & append (`>>` and `1>>`).
   - Standard error redirection (`2>` and `2>>`).
   - Automatic directory tree creation for target output paths.
 
-- ⌨️ **Interactive Terminal & Raw Mode**:
+- **Interactive Terminal & Raw Mode**:
   - Custom Raw Mode parser utilizing `termios`.
   - Up / Down arrow keys for dynamic command history traversal.
   - Smart backspace, character-by-character echoing, and line buffering.
 
-- 💡 **Tab Autocompletion**:
+- **Tab Autocompletion**:
   - Builtin command completion.
   - Binary executable discovery across `$PATH`.
   - Filesystem path and directory autocompletion with Longest Common Prefix (LCP) matching.
   - Programmable completion hooks (`complete` command support).
 
-- ⚙️ **Process Management & Background Jobs**:
+- **Process Management & Background Jobs**:
   - Async job launching with `&`.
   - Zombie process cleanup via asynchronous `waitpid(WNOHANG)`.
 
 ---
 
-## 🏛️ Architecture & System Design
+## Architecture & System Design
 
 ```mermaid
 flowchart TD
@@ -98,7 +100,7 @@ flowchart TD
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 .
@@ -114,7 +116,7 @@ flowchart TD
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -122,7 +124,7 @@ flowchart TD
 - **Build System**: `CMake` (>= 3.10)
 - **OS**: POSIX-compliant system (macOS / Linux / WSL)
 
-### 🔨 Build & Compilation
+### Build & Compilation
 
 Clone the repository and build using CMake:
 
@@ -136,7 +138,7 @@ cmake -B build -S .
 cmake --build build
 ```
 
-### 🏃 Running the Shell
+### Running the Shell
 
 Direct execution:
 ```bash
@@ -150,7 +152,7 @@ Or using the helper launcher:
 
 ---
 
-## 🧪 Usage Examples
+## Usage Examples
 
 #### 1. Piping commands
 ```bash
@@ -181,6 +183,6 @@ Custom Shell
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
