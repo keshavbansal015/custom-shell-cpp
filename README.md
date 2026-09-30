@@ -140,14 +140,16 @@ cmake --build build
 
 ### Running the Shell
 
-Direct execution:
+Build and then execute:
 ```bash
-./build/shell
+cmake -B build -S .
+cmake --build build
+./build/custom-shell
 ```
 
 Or using the helper launcher:
 ```bash
-./your_program.sh
+./run.sh
 ```
 
 ---

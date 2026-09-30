@@ -1,0 +1,36 @@
+# Build directories & artifacts
+build/
+bin/
+out/
+
+# Compiled binaries and object files
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+custom-shell
+
+# History / runtime temp files
+.shell_history
+*.log
+*.tmp
+
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE & Editor configs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.clangd/
+compile_commands.json
+.cache/
