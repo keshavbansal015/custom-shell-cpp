@@ -209,9 +209,9 @@ void shellLoop() {
     int err_fd = -1;
 
     if (redirect.redirect_stdout) {
-      filesystem::path p(redirect.stdout_file);
+      std::__fs::filesystem::path p(redirect.stdout_file);
       if (p.has_parent_path()) {
-        filesystem::create_directories(p.parent_path());
+        std::__fs::filesystem::create_directories(p.parent_path());
       }
 
       int flags =
@@ -225,9 +225,9 @@ void shellLoop() {
     }
 
     if (redirect.redirect_stderr) {
-      filesystem::path p(redirect.stderr_file);
+      std::__fs::filesystem::path p(redirect.stderr_file);
       if (p.has_parent_path()) {
-        filesystem::create_directories(p.parent_path());
+        std::__fs::filesystem::create_directories(p.parent_path());
       }
 
       int flags =
