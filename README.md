@@ -1,4 +1,4 @@
-# ⚡ Custom POSIX C++ Shell (Rush / CppShell)
+# Custom POSIX C++ Shell 
 
 A lightweight, robust, Unix-compliant interactive shell written from scratch in modern **C++17**.
 
